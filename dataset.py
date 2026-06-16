@@ -1,17 +1,26 @@
 import os
 from PIL import Image
-
-import torch
 from torch.utils.data import Dataset
-from torchvision import transforms
+
+from utils import CHARS
+
+
+def clean_label(text: str) -> str:
+    allowed = set(CHARS)
+    return "".join([c for c in text.strip() if c in allowed])
 
 
 class OCRDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir: str, transform=None):
         self.root_dir = root_dir
         self.image_dir = os.path.join(root_dir, "images")
         self.label_file = os.path.join(root_dir, "labels.txt")
         self.transform = transform
+
+        if not os.path.exists(self.image_dir):
+            raise FileNotFoundError(f"Image directory not found: {self.image_dir}")
+        if not os.path.exists(self.label_file):
+            raise FileNotFoundError(f"Label file not found: {self.label_file}")
 
         self.samples = []
         with open(self.label_file, "r", encoding="utf-8") as f:
@@ -19,7 +28,17 @@ class OCRDataset(Dataset):
                 line = line.strip()
                 if not line:
                     continue
+
                 filename, text = line.split(maxsplit=1)
+                text = clean_label(text)
+
+                if len(text) == 0:
+                    continue
+
+                image_path = os.path.join(self.image_dir, filename)
+                if not os.path.exists(image_path):
+                    continue
+
                 self.samples.append((filename, text))
 
     def __len__(self):

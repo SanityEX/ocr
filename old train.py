@@ -10,6 +10,9 @@ from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
 
+SAVE_WEIGHTS = "best_crnn_iiit5k.pth"
+
+
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
@@ -30,8 +33,8 @@ def collate_fn(batch):
 
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -44,7 +47,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     total_loss = 0.0
 
     for batch_idx, (images, texts, targets, target_lengths) in enumerate(loader):
-        if batch_idx % 50 == 0:
+        if batch_idx % 20 == 0:
             print(f"train batch: {batch_idx}/{len(loader)}")
 
         images = images.to(device)
@@ -65,6 +68,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
         optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
         optimizer.step()
 
         total_loss += loss.item()
@@ -80,7 +84,7 @@ def validate_one_epoch(model, loader, criterion, device):
     total = 0
 
     for batch_idx, (images, texts, targets, target_lengths) in enumerate(loader):
-        if batch_idx % 50 == 0:
+        if batch_idx % 20 == 0:
             print(f"val batch: {batch_idx}/{len(loader)}")
 
         images = images.to(device)
@@ -115,12 +119,52 @@ def validate_one_epoch(model, loader, criterion, device):
     return avg_loss, acc
 
 
+def load_pretrained_partial(model, device):
+    candidates = [
+        "best_crnn_realprint.pth",
+        "best_crnn_easy.pth",
+    ]
+
+    model_dict = model.state_dict()
+
+    for path in candidates:
+        if not os.path.exists(path):
+            continue
+
+        print(f"trying to load pretrained weights: {path}")
+        checkpoint = torch.load(path, map_location=device)
+
+        matched = {}
+        skipped = []
+
+        for k, v in checkpoint.items():
+            if k in model_dict and model_dict[k].shape == v.shape:
+                matched[k] = v
+            else:
+                skipped.append(k)
+
+        model_dict.update(matched)
+        model.load_state_dict(model_dict)
+
+        print(f"loaded matched layers: {len(matched)}")
+        print(f"skipped layers: {len(skipped)}")
+
+        if skipped:
+            print("example skipped keys:", skipped[:10])
+
+        return
+
+    print("[WARN] no pretrained weights found, training from scratch.")
+
+
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("device:", device)
 
     train_transform = transforms.Compose([
         transforms.Resize((48, 120)),
+        transforms.RandomRotation(3),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2),
         transforms.ToTensor(),
     ])
 
@@ -129,8 +173,11 @@ def main():
         transforms.ToTensor(),
     ])
 
-    train_dataset = OCRDataset("data_easy/train", transform=train_transform)
-    val_dataset = OCRDataset("data_easy/val", transform=val_transform)
+    train_dataset = OCRDataset("iiit5k_easy/train", transform=train_transform)
+    val_dataset = OCRDataset("iiit5k_easy/val", transform=val_transform)
+
+    print("train samples:", len(train_dataset))
+    print("val samples:", len(val_dataset))
 
     train_loader = DataLoader(
         train_dataset,
@@ -149,6 +196,8 @@ def main():
     num_classes = len(CHARS) + 1
     model = CRNN(num_classes=num_classes).to(device)
 
+    load_pretrained_partial(model, device)
+
     criterion = nn.CTCLoss(blank=0, zero_infinity=True)
     optimizer = optim.Adam(model.parameters(), lr=3e-4)
 
@@ -156,6 +205,7 @@ def main():
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
+        print(f"\n===== Epoch {epoch + 1}/{epochs} =====")
         train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
         val_loss, val_acc = validate_one_epoch(model, val_loader, criterion, device)
 
@@ -168,13 +218,13 @@ def main():
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), "best_crnn_easy.pth")
-            print("best model saved: best_crnn_easy.pth")
+            torch.save(model.state_dict(), SAVE_WEIGHTS)
+            print(f"best model saved: {SAVE_WEIGHTS}")
 
     print("training finished.")
 
 
 if __name__ == "__main__":
-    if not os.path.exists("data_easy/train") or not os.path.exists("data_easy/val"):
-        raise FileNotFoundError("Please make sure data_easy/train and data_easy/val exist.")
+    if not os.path.exists("iiit5k_easy/train") or not os.path.exists("iiit5k_easy/val"):
+        raise FileNotFoundError("Please run prepare_iiit5k.py first.")
     main()

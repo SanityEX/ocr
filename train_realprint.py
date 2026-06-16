@@ -10,6 +10,10 @@ from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
 
+PRETRAINED_WEIGHTS = "best_crnn_easy.pth"
+SAVE_WEIGHTS = "best_crnn_realprint.pth"
+
+
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
@@ -30,8 +34,8 @@ def collate_fn(batch):
 
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -129,8 +133,8 @@ def main():
         transforms.ToTensor(),
     ])
 
-    train_dataset = OCRDataset("data_easy/train", transform=train_transform)
-    val_dataset = OCRDataset("data_easy/val", transform=val_transform)
+    train_dataset = OCRDataset("data_realprint/train", transform=train_transform)
+    val_dataset = OCRDataset("data_realprint/val", transform=val_transform)
 
     train_loader = DataLoader(
         train_dataset,
@@ -149,10 +153,16 @@ def main():
     num_classes = len(CHARS) + 1
     model = CRNN(num_classes=num_classes).to(device)
 
-    criterion = nn.CTCLoss(blank=0, zero_infinity=True)
-    optimizer = optim.Adam(model.parameters(), lr=3e-4)
+    if os.path.exists(PRETRAINED_WEIGHTS):
+        model.load_state_dict(torch.load(PRETRAINED_WEIGHTS, map_location=device))
+        print(f"loaded pretrained weights: {PRETRAINED_WEIGHTS}")
+    else:
+        print("[WARN] pretrained weights not found, training from scratch.")
 
-    epochs = 20
+    criterion = nn.CTCLoss(blank=0, zero_infinity=True)
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+
+    epochs = 12
     best_val_loss = float("inf")
 
     for epoch in range(epochs):
@@ -168,13 +178,13 @@ def main():
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), "best_crnn_easy.pth")
-            print("best model saved: best_crnn_easy.pth")
+            torch.save(model.state_dict(), SAVE_WEIGHTS)
+            print(f"best model saved: {SAVE_WEIGHTS}")
 
     print("training finished.")
 
 
 if __name__ == "__main__":
-    if not os.path.exists("data_easy/train") or not os.path.exists("data_easy/val"):
-        raise FileNotFoundError("Please make sure data_easy/train and data_easy/val exist.")
+    if not os.path.exists("data_realprint/train") or not os.path.exists("data_realprint/val"):
+        raise FileNotFoundError("Please make sure data_realprint/train and data_realprint/val exist.")
     main()

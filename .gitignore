@@ -1,17 +1,71 @@
-# 虚拟环境
+﻿# Virtual environments
 .venv/
 venv/
 
-# Python缓存
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# 模型文件
+# Large model checkpoints
 *.pth
 *.pt
 
-# 数据
-data/
+# Generated outputs and logs
+outputs/
+visual_outputs/
+webcam_runtime_results/
+*.log
+*.err.log
 
-# 系统文件
+# Local smoke-test files
+_batch_smoke_*.csv
+_smoke_*/
+
+# Large datasets / historical experiment data
+IIIT5K-Word_V3.0/
+iiit5k_easy/
+iiit5k_alnum/
+data/
+data_easy/
+data_realprint*/
+data_japanese_synth_smoke/
+data_recovery/
+data_target90_synth*/
+balanced_occlusion_dataset/
+char_occlusion_dataset*/
+completion_hard_dataset/
+controlled_*dataset/
+controlled_occlusion_*/
+occlusion_filtered_merge/
+word_occluded_10k/
+recognition/
+*.zip
+*.mat
+merge_train*.txt
+istd_train_*.txt
+
+# Historical experiment result files
+*_result.csv
+*_result.txt
+recovery_error_analysis.csv
+reject_threshold_tuning.csv
+practical_recovery_policy_result.csv
+parseq_*result.csv
+occlusion_pipeline_*result*
+occluded_*result.txt
+topk_*result.txt
+reconstruction_candidates.txt
+uncertain_reconstruction_result.txt
+
+# Extra demo/result variants
+real_demo_results_beam*/
+real_demo_results_heavy_model/
+real_demo_results_no_char_constraints/
+real_demo_benchmark_images/
+real_demo_benchmark_results/
+
+# System / IDE files
 .DS_Store
+.idea/

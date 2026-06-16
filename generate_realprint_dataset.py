@@ -1,18 +1,20 @@
 import os
 import random
 import shutil
+import string
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-OUTPUT_DIR = "data_easy"
-TRAIN_COUNT = 4000
-VAL_COUNT = 500
-TEST_COUNT = 500
+OUTPUT_DIR = "data_realprint"
+TRAIN_COUNT = 5000
+VAL_COUNT = 800
+TEST_COUNT = 800
 
-IMG_W = 120
-IMG_H = 48
+IMG_W = 140
+IMG_H = 52
 
 FONTS_DIR = "fonts"
-FONT_SIZES = [24, 26, 28, 30]
+FONT_SIZES = [24, 26, 28, 30, 32]
 
 COMMON_WORDS = [
     "hello", "python", "world", "model", "train", "data", "batch", "image",
@@ -42,23 +44,33 @@ def load_fonts(fonts_dir: str):
 
     for file in os.listdir(fonts_dir):
         name = file.lower()
-        if name.endswith((".ttf", ".otf")):
-            if "italic" in name or "oblique" in name:
-                continue
-            if name.endswith("i.ttf") or name.endswith("z.ttf"):
-                continue
-            fonts.append(os.path.join(fonts_dir, file))
+        if not name.endswith((".ttf", ".otf")):
+            continue
+        if "italic" in name or "oblique" in name:
+            continue
+        if name.endswith("i.ttf") or name.endswith("z.ttf"):
+            continue
+        fonts.append(os.path.join(fonts_dir, file))
     return fonts
 
 
 def random_word():
-    return random.choice(COMMON_WORDS)
+    if random.random() < 0.8:
+        return random.choice(COMMON_WORDS)
+    length = random.randint(3, 8)
+    return "".join(random.choices(string.ascii_lowercase, k=length))
+
+
+def add_noise(img: Image.Image, sigma=4):
+    arr = np.array(img).astype(np.float32)
+    noise = np.random.normal(0, sigma, arr.shape)
+    arr = np.clip(arr + noise, 0, 255).astype(np.uint8)
+    return Image.fromarray(arr)
 
 
 def render_text_image(text: str, font_paths: list[str]):
-    bg_white = True
-    bg_color = random.randint(240, 255)
-    fg_color = random.randint(0, 20)
+    bg_color = random.randint(225, 255)
+    fg_color = random.randint(0, 35)
 
     img = Image.new("L", (IMG_W, IMG_H), color=bg_color)
     draw = ImageDraw.Draw(img)
@@ -74,16 +86,29 @@ def render_text_image(text: str, font_paths: list[str]):
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
 
-    x = max(4, (IMG_W - text_w) // 2 + random.randint(-4, 4))
-    y = max(2, (IMG_H - text_h) // 2 + random.randint(-2, 2))
+    x = max(4, (IMG_W - text_w) // 2 + random.randint(-10, 10))
+    y = max(2, (IMG_H - text_h) // 2 + random.randint(-4, 4))
 
     draw.text((x, y), text, font=font, fill=fg_color)
 
-    angle = random.uniform(-2, 2)
+    angle = random.uniform(-3, 3)
     img = img.rotate(angle, resample=Image.BICUBIC, expand=False, fillcolor=bg_color)
 
-    if random.random() < 0.08:
-        img = img.filter(ImageFilter.GaussianBlur(radius=random.uniform(0.2, 0.5)))
+    if random.random() < 0.2:
+        new_w = random.randint(IMG_W - 8, IMG_W)
+        new_h = random.randint(IMG_H - 4, IMG_H)
+        img = img.resize((new_w, new_h), Image.BICUBIC)
+        canvas = Image.new("L", (IMG_W, IMG_H), color=bg_color)
+        paste_x = random.randint(0, IMG_W - new_w)
+        paste_y = random.randint(0, IMG_H - new_h)
+        canvas.paste(img, (paste_x, paste_y))
+        img = canvas
+
+    if random.random() < 0.15:
+        img = img.filter(ImageFilter.GaussianBlur(radius=random.uniform(0.2, 0.8)))
+
+    if random.random() < 0.2:
+        img = add_noise(img, sigma=random.uniform(2, 6))
 
     return img
 
@@ -120,7 +145,7 @@ def main():
     save_split("val", VAL_COUNT, font_paths, TRAIN_COUNT)
     save_split("test", TEST_COUNT, font_paths, TRAIN_COUNT + VAL_COUNT)
 
-    print("dataset generation finished.")
+    print("real print dataset generation finished.")
 
 
 if __name__ == "__main__":
