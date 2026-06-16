@@ -10,7 +10,6 @@ from torchvision import transforms
 from model_attention_ocr import AttentionOCR
 from utils import VOCAB_SIZE, SOS_IDX, EOS_IDX, idx_to_char
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 GT_TXT = r"D:\mnist_project\ocr1\recognition\recognition\gt_recognition.txt"
 
@@ -41,7 +40,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 CONFUSION_PAIRS = {
     ("O", "0"), ("0", "O"),
     ("I", "1"), ("1", "I"),
@@ -63,7 +61,6 @@ CONFUSION_PAIRS = {
     ("Y", "V"), ("V", "Y"),
 }
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -73,10 +70,8 @@ def idx_to_text(idx):
         return idx_to_char.get(idx, "")
     return ""
 
-
 def normalize_text(text):
     return "".join(ch for ch in text.upper() if ch.isalnum())
-
 
 def load_gt(path):
     data = {}
@@ -101,7 +96,6 @@ def load_gt(path):
 
     return data
 
-
 def build_lexicon(gt_data):
     words = set()
 
@@ -112,7 +106,6 @@ def build_lexicon(gt_data):
             words.add(word)
 
     return sorted(words)
-
 
 def char_cost(a, b):
     if a == b:
@@ -128,7 +121,6 @@ def char_cost(a, b):
         return 1.0
 
     return 1.25
-
 
 def confusion_edit_distance(a, b):
     n = len(a)
@@ -152,7 +144,6 @@ def confusion_edit_distance(a, b):
 
     return dp[n][m]
 
-
 def char_overlap_score(word, pred):
     cw = Counter(word)
     cp = Counter(pred)
@@ -165,7 +156,6 @@ def char_overlap_score(word, pred):
     denom = max(len(word), len(pred), 1)
 
     return common / denom
-
 
 def prefix_score(word, pred):
     if not word or not pred:
@@ -180,7 +170,6 @@ def prefix_score(word, pred):
             break
 
     return count / max(len(word), len(pred), 1)
-
 
 @torch.no_grad()
 def predict_topk_probs(model, image_path):
@@ -239,7 +228,6 @@ def predict_topk_probs(model, image_path):
 
     return "".join(pred_chars), step_probs
 
-
 def visual_score_candidate(word, step_probs):
     if len(step_probs) == 0:
         return -1e9
@@ -279,7 +267,6 @@ def visual_score_candidate(word, step_probs):
                 )
 
     return dp[n][m]
-
 
 def rerank(pred, step_probs, lexicon):
     pred_norm = normalize_text(pred)
@@ -329,7 +316,6 @@ def rerank(pred, step_probs, lexicon):
     candidates.sort(key=lambda x: x[1], reverse=True)
 
     return candidates[0][0], candidates[:10]
-
 
 def main():
     print("device:", DEVICE)
@@ -454,7 +440,6 @@ def main():
                 f"overlap={overlap:.2f} "
                 f"prefix={prefix:.2f}"
             )
-
 
 if __name__ == "__main__":
     main()

@@ -4,11 +4,9 @@ from torch.utils.data import Dataset
 
 from utils import CHARS
 
-
 def clean_label(text: str) -> str:
     allowed = set(CHARS)
     return "".join([c for c in text.strip() if c in allowed])
-
 
 class OCRDataset(Dataset):
     def __init__(self, root_dir: str, transform=None):

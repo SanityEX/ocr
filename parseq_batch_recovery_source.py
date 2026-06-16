@@ -12,10 +12,8 @@ from batch_predict_word_recovery import collect_images, read_labels
 from predict_word_recovery import DEFAULT_LEXICON, load_merged_lexicon
 from recovery_gate_common import normalize_text
 
-
 PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_CSV = PROJECT_DIR / "data_recovery" / "parseq_recovery_source.csv"
-
 
 def infer_level(filename: str, fallback: str) -> str:
     name = filename.lower()
@@ -25,7 +23,6 @@ def infer_level(filename: str, fallback: str) -> str:
             return level
 
     return fallback
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -114,7 +111,6 @@ def main():
     print("rows:", total)
     print("raw_acc:", raw_correct / total if total else 0.0)
     print("v4_acc:", recovered_correct / total if total else 0.0)
-
 
 if __name__ == "__main__":
     main()

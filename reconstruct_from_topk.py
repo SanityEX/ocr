@@ -14,7 +14,6 @@ from utils import (
     decode_attention
 )
 
-
 IMAGE_PATH = r"D:\mnist_project\ocr1\recognition\recognition\30\img_100.jpg"
 WEIGHTS = r"D:\mnist_project\ocr1\best_attention_istd_occlusion_acc.pth"
 
@@ -33,7 +32,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -43,7 +41,6 @@ def idx_to_text(idx):
         return idx_to_char.get(idx, "")
     return ""
 
-
 def clean_decode(seq):
     result = []
     for idx in seq:
@@ -52,7 +49,6 @@ def clean_decode(seq):
         if idx >= 3:
             result.append(idx)
     return decode_attention(result)
-
 
 @torch.no_grad()
 def get_topk_steps(model, image_path):
@@ -116,7 +112,6 @@ def get_topk_steps(model, image_path):
 
     return pred_text, topk_steps
 
-
 def reconstruct_candidates(topk_steps):
     beams = [("", 1.0)]
 
@@ -133,7 +128,6 @@ def reconstruct_candidates(topk_steps):
         beams = new_beams[:MAX_CANDIDATES]
 
     return beams
-
 
 def main():
     print("device:", DEVICE)
@@ -188,7 +182,6 @@ def main():
 
     print("\n".join(lines))
     print("saved:", OUTPUT_TXT)
-
 
 if __name__ == "__main__":
     main()

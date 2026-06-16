@@ -14,7 +14,6 @@ from utils import (
     decode_attention
 )
 
-
 IMAGE_PATH = r"D:\mnist_project\ocr1\recognition\recognition\30\img_100.jpg"
 GT_TEXT = "FAIRPRICE"
 
@@ -37,7 +36,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -47,7 +45,6 @@ def idx_to_text(idx):
         return idx_to_char.get(idx, "")
     return ""
 
-
 def clean_decode(seq):
     result = []
     for idx in seq:
@@ -56,7 +53,6 @@ def clean_decode(seq):
         if idx >= 3:
             result.append(idx)
     return decode_attention(result).strip().upper()
-
 
 @torch.no_grad()
 def predict_topk(model, image_path):
@@ -116,7 +112,6 @@ def predict_topk(model, image_path):
 
     return pred_text, topk_steps
 
-
 def build_uncertain_expression(topk_steps):
     parts = []
     uncertain_positions = []
@@ -132,7 +127,6 @@ def build_uncertain_expression(topk_steps):
             uncertain_positions.append(i)
 
     return "".join(parts), uncertain_positions
-
 
 def detect_missing_and_replace(gt, pred):
     matcher = difflib.SequenceMatcher(None, gt, pred)
@@ -168,7 +162,6 @@ def detect_missing_and_replace(gt, pred):
 
     return results
 
-
 def generate_candidates(topk_steps):
     beams = [("", 1.0)]
 
@@ -199,7 +192,6 @@ def generate_candidates(topk_steps):
         beams = new_beams[:MAX_CANDIDATES]
 
     return beams
-
 
 def main():
     print("device:", DEVICE)
@@ -311,7 +303,6 @@ def main():
 
     print("\n".join(lines))
     print("saved:", OUTPUT_TXT)
-
 
 if __name__ == "__main__":
     main()

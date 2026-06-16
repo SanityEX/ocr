@@ -14,7 +14,6 @@ from utils import (
     decode_attention
 )
 
-
 IMAGE_PATH = r"D:\mnist_project\ocr1\recognition\recognition\30\img_100.jpg"
 
 WEIGHTS = r"D:\mnist_project\ocr1\best_attention_istd_occlusion_acc.pth"
@@ -36,7 +35,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def clean_decode(seq):
     result = []
 
@@ -48,7 +46,6 @@ def clean_decode(seq):
             result.append(idx)
 
     return decode_attention(result)
-
 
 @torch.no_grad()
 def predict_with_attention(model, image_path):
@@ -94,7 +91,6 @@ def predict_with_attention(model, image_path):
     pred_text = clean_decode(pred_tokens)
 
     return img, pred_text, attention_maps
-
 
 def visualize(img, pred_text, attention_maps):
 
@@ -160,7 +156,6 @@ def visualize(img, pred_text, attention_maps):
     print("Saved:", save_path)
     print("=" * 50)
 
-
 def main():
 
     print("device:", DEVICE)
@@ -188,7 +183,6 @@ def main():
         pred_text,
         attention_maps
     )
-
 
 if __name__ == "__main__":
     main()

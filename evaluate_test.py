@@ -7,7 +7,6 @@ from torchvision import transforms
 from model import CRNN
 from utils import CHARS, decode_ctc
 
-
 def load_labels(label_file):
     samples = []
     with open(label_file, "r", encoding="utf-8") as f:
@@ -19,18 +18,16 @@ def load_labels(label_file):
             samples.append((filename, text))
     return samples
 
-
 def predict_image(model, image_path, transform, device):
     image = Image.open(image_path).convert("L")
     image = transform(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        logits = model(image)  # [T, 1, C]
+        logits = model(image)
         pred = logits.argmax(dim=2).squeeze(1).cpu().tolist()
         text = decode_ctc(pred)
 
     return text
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -73,7 +70,6 @@ def main():
     print(f"Test samples: {total}")
     print(f"Correct: {correct}")
     print(f"Accuracy: {acc:.4f}")
-
 
 if __name__ == "__main__":
     main()

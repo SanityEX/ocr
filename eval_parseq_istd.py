@@ -3,7 +3,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 GT_TXT = r"D:\mnist_project\ocr1\recognition\recognition\gt_recognition.txt"
 
@@ -14,7 +13,6 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 IMG_H = 32
 IMG_W = 128
 
-
 transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
@@ -24,10 +22,8 @@ transform = transforms.Compose([
     )
 ])
 
-
 def normalize_text(text):
     return "".join(ch for ch in text.upper() if ch.isalnum())
-
 
 def load_gt(path):
     data = {}
@@ -51,7 +47,6 @@ def load_gt(path):
 
     return data
 
-
 @torch.no_grad()
 def predict_one(model, img_path):
     img = Image.open(img_path).convert("RGB")
@@ -66,7 +61,6 @@ def predict_one(model, img_path):
     conf = float(confidences[0].mean().item()) if len(confidences[0]) > 0 else 0.0
 
     return normalize_text(pred), conf
-
 
 def main():
     print("device:", DEVICE)
@@ -133,7 +127,6 @@ def main():
 
     for name, gt, pred, conf in wrong_cases:
         print(f"{name} | GT={gt} | PRED={pred} | conf={conf:.4f}")
-
 
 if __name__ == "__main__":
     main()

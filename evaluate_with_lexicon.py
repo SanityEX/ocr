@@ -8,28 +8,24 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import decode_ctc, CHARS
 
-
 WEIGHTS_PATH = "best_crnn_iiit5k.pth"
 TEST_DIR = "iiit5k_easy/test"
 LEXICON_PATH = "IIIT5K-Word_V3.0/IIIT5K/lexicon.txt"
-
 
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
     return images, texts
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
         results.append(decode_ctc(seq.cpu().tolist()))
     return results
-
 
 def load_lexicon(path: str) -> list[str]:
     if not os.path.exists(path):
@@ -66,7 +62,6 @@ def load_lexicon(path: str) -> list[str]:
 
     return uniq
 
-
 def correct_word_smart(pred: str, lexicon: list[str]) -> str:
     pred = pred.lower().strip()
 
@@ -96,12 +91,10 @@ def correct_word_smart(pred: str, lexicon: list[str]) -> str:
             best_score = score
             best_word = word
 
-    # 5️⃣ 防止乱改
     if best_score > 2:
         return pred
 
     return best_word
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -171,7 +164,6 @@ def main():
     print(f"Raw accuracy:  {raw_acc:.4f}")
     print(f"Fixed correct: {fixed_correct}")
     print(f"Fixed accuracy:{fixed_acc:.4f}")
-
 
 if __name__ == "__main__":
     main()

@@ -7,7 +7,6 @@ import io
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
-
 OUTPUT_DIR = "data_realprint_realistic_100k"
 FONTS_DIR = "fonts"
 
@@ -57,16 +56,13 @@ CONFUSION_PATTERNS = [
     "HOTEL2024", "SHOP88", "OPEN24", "SALE50", "GATE01"
 ]
 
-
 def reset_dir(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
 
-
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
-
 
 def load_fonts(fonts_dir):
     fonts = []
@@ -80,7 +76,6 @@ def load_fonts(fonts_dir):
 
     return fonts
 
-
 def get_font(font_paths):
     if font_paths:
         font_path = random.choice(font_paths)
@@ -88,7 +83,6 @@ def get_font(font_paths):
         return ImageFont.truetype(font_path, font_size)
 
     return ImageFont.load_default()
-
 
 def random_case(word):
     mode = random.random()
@@ -108,21 +102,17 @@ def random_case(word):
                 chars.append(c)
         return "".join(chars)
 
-
 def random_alnum_string(min_len=3, max_len=14):
     length = random.randint(min_len, max_len)
     return "".join(random.choices(CHARS, k=length))
-
 
 def random_long_word():
     length = random.randint(10, 18)
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
-
 def random_number_string():
     length = random.randint(3, 10)
     return "".join(random.choices(string.digits, k=length))
-
 
 def random_word():
     p = random.random()
@@ -149,7 +139,6 @@ def random_word():
     else:
         return random_long_word()
 
-
 def generate_clean_background(width, height):
     base = random.randint(205, 255)
     arr = np.ones((height, width), dtype=np.uint8) * base
@@ -168,7 +157,6 @@ def generate_clean_background(width, height):
 
     return Image.fromarray(arr, mode="L")
 
-
 def choose_text_gray(bg_img):
     bg_mean = np.array(bg_img).mean()
 
@@ -178,7 +166,6 @@ def choose_text_gray(bg_img):
         return random.randint(20, 95)
     else:
         return random.randint(40, 130)
-
 
 def create_text_layer(text, font, canvas_size):
     width, height = canvas_size
@@ -213,7 +200,6 @@ def create_text_layer(text, font, canvas_size):
 
     return layer
 
-
 def blend_text(bg_img, text_mask):
     bg = np.array(bg_img).astype(np.float32)
     mask = np.array(text_mask).astype(np.float32) / 255.0
@@ -225,7 +211,6 @@ def blend_text(bg_img, text_mask):
     out = np.clip(out, 0, 255).astype(np.uint8)
 
     return Image.fromarray(out, mode="L")
-
 
 def find_perspective_coeffs(src_pts, dst_pts):
     matrix = []
@@ -250,7 +235,6 @@ def find_perspective_coeffs(src_pts, dst_pts):
     coeffs = np.linalg.lstsq(A, B, rcond=None)[0]
     return coeffs
 
-
 def random_perspective(img):
     w, h = img.size
     mx = int(w * 0.08)
@@ -273,7 +257,6 @@ def random_perspective(img):
         coeffs,
         Image.BICUBIC
     )
-
 
 def random_affine(img):
     angle = random.uniform(-6, 6)
@@ -299,7 +282,6 @@ def random_affine(img):
 
     return img
 
-
 def add_gaussian_noise(img, sigma=8):
     arr = np.array(img).astype(np.float32)
     noise = np.random.normal(0, sigma, arr.shape)
@@ -307,7 +289,6 @@ def add_gaussian_noise(img, sigma=8):
     arr = np.clip(arr + noise, 0, 255).astype(np.uint8)
 
     return Image.fromarray(arr, mode="L")
-
 
 def add_salt_pepper_noise(img, amount=0.002):
     arr = np.array(img).copy()
@@ -323,7 +304,6 @@ def add_salt_pepper_noise(img, amount=0.002):
 
     return Image.fromarray(arr, mode="L")
 
-
 def jpeg_degrade(img):
     bio = io.BytesIO()
     quality = random.randint(15, 60)
@@ -332,7 +312,6 @@ def jpeg_degrade(img):
     bio.seek(0)
 
     return Image.open(bio).convert("L")
-
 
 def random_low_resolution(img):
     w, h = img.size
@@ -357,7 +336,6 @@ def random_low_resolution(img):
 
     return img
 
-
 def random_occlusion(img):
     draw = ImageDraw.Draw(img)
     w, h = img.size
@@ -375,7 +353,6 @@ def random_occlusion(img):
             draw.rectangle([x1, y1, x2, y2], fill=color)
 
     return img
-
 
 def crop_to_text_area(img):
     arr = np.array(img)
@@ -400,7 +377,6 @@ def crop_to_text_area(img):
 
     return img.crop((x1, y1, x2 + 1, y2 + 1))
 
-
 def fit_height_keep_ratio(img, target_h=IMG_H, min_w=MIN_W, max_w=MAX_W):
     w, h = img.size
 
@@ -408,7 +384,6 @@ def fit_height_keep_ratio(img, target_h=IMG_H, min_w=MIN_W, max_w=MAX_W):
     new_w = max(min_w, min(new_w, max_w))
 
     return img.resize((new_w, target_h), Image.BICUBIC)
-
 
 def render_text_image(text, font_paths):
     bg = generate_clean_background(CANVAS_W, CANVAS_H)
@@ -467,7 +442,6 @@ def render_text_image(text, font_paths):
 
     return img
 
-
 def save_split(split_name, count, font_paths, start_idx):
     split_dir = os.path.join(OUTPUT_DIR, split_name)
     img_dir = os.path.join(split_dir, "images")
@@ -495,7 +469,6 @@ def save_split(split_name, count, font_paths, start_idx):
 
     print(f"{split_name} saved: {count}")
 
-
 def main():
     reset_dir(OUTPUT_DIR)
 
@@ -508,7 +481,6 @@ def main():
 
     print("realistic synthetic dataset generation finished.")
     print("output:", OUTPUT_DIR)
-
 
 if __name__ == "__main__":
     main()

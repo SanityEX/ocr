@@ -1,7 +1,6 @@
 import os
 import random
 
-
 SYNTH_TXT = r"D:\mnist_project\ocr1\data_realprint_realistic_100k\train\labels.txt"
 SYNTH_IMG_DIR = r"D:\mnist_project\ocr1\data_realprint_realistic_100k\train\images"
 
@@ -12,7 +11,6 @@ IIIT_VAL_TXT = r"D:\mnist_project\ocr1\iiit5k_alnum\val\labels.txt"
 IIIT_VAL_DIR = r"D:\mnist_project\ocr1\iiit5k_alnum\val\images"
 
 OUTPUT_TXT = r"D:\mnist_project\ocr1\merge_train_v2.txt"
-
 
 def read_labels(txt_path, img_dir):
     samples = []
@@ -40,7 +38,6 @@ def read_labels(txt_path, img_dir):
 
     return samples
 
-
 def main():
     synth = read_labels(SYNTH_TXT, SYNTH_IMG_DIR)
     iiit_train = read_labels(IIIT_TRAIN_TXT, IIIT_TRAIN_DIR)
@@ -60,7 +57,6 @@ def main():
     print("Total:", len(all_samples))
     print("Saved:", OUTPUT_TXT)
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

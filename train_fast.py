@@ -11,11 +11,9 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
-
 SAVE_WEIGHTS_ACC = "best_fast_acc.pth"
 SAVE_WEIGHTS_LOSS = "best_fast_loss.pth"
 CURVE_JSON = "curve_fast.json"
-
 
 def collate_fn(batch):
     images, texts = zip(*batch)
@@ -34,11 +32,10 @@ def collate_fn(batch):
 
     return images, texts, targets, target_lengths
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -50,7 +47,6 @@ def greedy_decode(logits: torch.Tensor) -> list[str]:
             prev = idx
         results.append(decode_ctc(indices))
     return results
-
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -84,7 +80,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate_one_epoch(model, loader, criterion, device):
@@ -125,7 +120,6 @@ def validate_one_epoch(model, loader, criterion, device):
     acc = correct / total if total > 0 else 0.0
     return avg_loss, acc
 
-
 def load_pretrained(model, device):
     candidates = [
         "best_fast_acc.pth",
@@ -148,7 +142,6 @@ def load_pretrained(model, device):
                 continue
 
     print("[WARN] no pretrained weights loaded, training from scratch.")
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -266,7 +259,6 @@ def main():
     print(f"best val_loss: {best_val_loss:.4f}")
     print(f"best val_acc: {best_val_acc:.4f}")
     print(f"curve saved to: {CURVE_JSON}")
-
 
 if __name__ == "__main__":
     if not os.path.exists("iiit5k_alnum/train") or not os.path.exists("iiit5k_alnum/val"):

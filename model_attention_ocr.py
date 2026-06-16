@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
@@ -58,7 +57,6 @@ class ResidualBlock(nn.Module):
 
         return out
 
-
 class EncoderCNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -107,18 +105,17 @@ class EncoderCNN(nn.Module):
         )
 
     def forward(self, x):
-        x = self.stem(x)       # [B,64,48,192]
-        x = self.layer1(x)     # [B,64,24,96]
-        x = self.layer2(x)     # [B,128,12,48]
-        x = self.layer3(x)     # [B,256,6,48]
-        x = self.layer4(x)     # [B,384,3,48]
-        x = self.layer5(x)     # [B,512,1,48]
+        x = self.stem(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
 
-        x = x.squeeze(2)       # [B,512,48]
-        x = x.permute(2, 0, 1) # [48,B,512]
+        x = x.squeeze(2)
+        x = x.permute(2, 0, 1)
 
         return x
-
 
 class EncoderRNN(nn.Module):
     def __init__(self, input_size=512, hidden_size=256):
@@ -135,7 +132,6 @@ class EncoderRNN(nn.Module):
     def forward(self, x):
         outputs, hidden = self.rnn(x)
         return outputs, hidden
-
 
 class AttentionDecoder(nn.Module):
     def __init__(self, vocab_size, hidden_size=256, embed_size=256):
@@ -210,7 +206,6 @@ class AttentionDecoder(nn.Module):
         c_dec = (c[-2] + c[-1]).unsqueeze(0)
 
         return h_dec, c_dec
-
 
 class AttentionOCR(nn.Module):
     def __init__(self, vocab_size, hidden_size=256, embed_size=256):

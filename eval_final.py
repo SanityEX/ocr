@@ -17,7 +17,6 @@ IMG_H = 48
 IMG_W = 192
 MAX_LABEL_LEN = 25
 
-
 class TxtOCRDataset(Dataset):
     def __init__(self, txt_path, img_dir, transform=None):
         self.samples = []
@@ -54,13 +53,11 @@ class TxtOCRDataset(Dataset):
 
         return img, label
 
-
 def val_transform():
     return transforms.Compose([
         transforms.Resize((IMG_H, IMG_W)),
         transforms.ToTensor(),
     ])
-
 
 def clean_decode(seq):
     result = []
@@ -70,7 +67,6 @@ def clean_decode(seq):
         if idx >= 3:
             result.append(idx)
     return decode_attention(result)
-
 
 @torch.no_grad()
 def greedy_decode(model, image, device):
@@ -85,7 +81,6 @@ def greedy_decode(model, image, device):
 
     seq = pred_tokens.squeeze(0).cpu().tolist()
     return clean_decode(seq)
-
 
 @torch.no_grad()
 def beam_decode(model, image, device, beam_size=5):
@@ -102,13 +97,11 @@ def beam_decode(model, image, device, beam_size=5):
     seq = pred_tokens.squeeze(0).cpu().tolist()
     return clean_decode(seq)
 
-
 def load_model(weights, device):
     model = AttentionOCR(vocab_size=VOCAB_SIZE).to(device)
     model.load_state_dict(torch.load(weights, map_location=device))
     model.eval()
     return model
-
 
 @torch.no_grad()
 def evaluate(model, loader, device, beam_size=5):
@@ -146,7 +139,6 @@ def evaluate(model, loader, device, beam_size=5):
     print(f"Gain: {correct_b/total - correct_g/total:+.4f}")
     print("=" * 50)
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--labels", required=True)
@@ -170,7 +162,6 @@ def main():
     model = load_model(args.weights, device)
 
     evaluate(model, loader, device, args.beam_size)
-
 
 if __name__ == "__main__":
     main()

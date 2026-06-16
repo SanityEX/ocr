@@ -6,10 +6,8 @@ from torchvision import transforms
 from model import CRNN
 from utils import CHARS, decode_ctc
 
-
 WEIGHTS_PATH = "best_crnn_realprint.pth"
 REAL_TEST_DIR = "real_test"
-
 
 def load_labels(label_file):
     samples = []
@@ -21,7 +19,6 @@ def load_labels(label_file):
             filename, text = line.split(maxsplit=1)
             samples.append((filename, text.lower()))
     return samples
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -66,7 +63,6 @@ def main():
     print(f"Total: {total}")
     print(f"Correct: {correct}")
     print(f"Accuracy: {acc:.4f}")
-
 
 if __name__ == "__main__":
     main()

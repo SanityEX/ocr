@@ -13,7 +13,6 @@ from utils import (
     idx_to_char
 )
 
-
 IMAGE_PATH = r"D:\mnist_project\ocr1\recognition\recognition\30\img_100.jpg"
 WEIGHTS = r"D:\mnist_project\ocr1\best_attention_istd_occlusion_acc.pth"
 
@@ -31,7 +30,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -40,7 +38,6 @@ def idx_to_text(idx):
     if idx >= 3:
         return idx_to_char.get(idx, "")
     return ""
-
 
 def clean_decode(seq):
     result = []
@@ -53,7 +50,6 @@ def clean_decode(seq):
             result.append(idx)
 
     return decode_attention(result)
-
 
 @torch.no_grad()
 def predict_topk(model, image_path):
@@ -112,7 +108,6 @@ def predict_topk(model, image_path):
 
     return pred_text, all_topk
 
-
 def main():
     print("device:", DEVICE)
     print("image:", IMAGE_PATH)
@@ -153,7 +148,6 @@ def main():
 
     print("\n".join(lines))
     print("saved:", OUTPUT_TXT)
-
 
 if __name__ == "__main__":
     main()

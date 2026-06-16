@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use("Agg")   # 关键：不用PyCharm弹窗后端
+matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
@@ -26,7 +26,6 @@ val_accs = [
 
 epochs = list(range(1, len(train_losses) + 1))
 
-# Loss 曲线
 plt.figure(figsize=(8, 5))
 plt.plot(epochs, train_losses, marker="o", label="Train Loss")
 plt.plot(epochs, val_losses, marker="s", label="Validation Loss")
@@ -39,7 +38,6 @@ plt.tight_layout()
 plt.savefig("old_loss_curve.png", dpi=200)
 plt.close()
 
-# Accuracy 曲线
 plt.figure(figsize=(8, 5))
 plt.plot(epochs, val_accs, marker="o", label="Validation Accuracy")
 plt.title("Validation Accuracy")

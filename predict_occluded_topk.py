@@ -13,7 +13,6 @@ from utils import (
     idx_to_char
 )
 
-
 IMG_DIR = r"D:\mnist_project\ocr1\word_occluded_10k\images"
 META_CSV = r"D:\mnist_project\ocr1\word_occluded_10k\metadata.csv"
 WEIGHTS = r"D:\mnist_project\ocr1\best_attention_v2_phase2_acc.pth"
@@ -31,7 +30,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def load_meta(path):
     rows = []
     with open(path, "r", encoding="utf-8") as f:
@@ -39,7 +37,6 @@ def load_meta(path):
         for row in reader:
             rows.append(row)
     return rows
-
 
 def idx_to_text(idx):
     if idx == EOS_IDX:
@@ -49,7 +46,6 @@ def idx_to_text(idx):
     if idx >= 3:
         return idx_to_char.get(idx, "")
     return ""
-
 
 @torch.no_grad()
 def predict_topk(model, image_path):
@@ -107,7 +103,6 @@ def predict_topk(model, image_path):
 
     return "".join(pred_chars), topk_steps
 
-
 def main():
     print("device:", DEVICE)
 
@@ -160,7 +155,6 @@ def main():
         f.write("\n".join(results))
 
     print("saved:", OUTPUT_TXT)
-
 
 if __name__ == "__main__":
     main()

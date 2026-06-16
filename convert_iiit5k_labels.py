@@ -3,7 +3,6 @@ from scipy.io import loadmat
 
 ROOT = "IIIT5K-Word_V3.0/IIIT5K"
 
-
 def unwrap(x):
     while hasattr(x, "__len__") and not isinstance(x, str):
         if len(x) == 1:
@@ -11,7 +10,6 @@ def unwrap(x):
         else:
             break
     return str(x)
-
 
 def convert(mat_name, key_name, split_name):
     mat_path = os.path.join(ROOT, mat_name)
@@ -29,7 +27,6 @@ def convert(mat_name, key_name, split_name):
             img_name = unwrap(item[0]).strip().replace("\\", "/")
             label = unwrap(item[1]).strip()
 
-            # 兼容 .mat 中已经自带 train/ test/ 前缀
             if img_name.startswith("train/") or img_name.startswith("test/"):
                 full_path = os.path.join(ROOT, img_name)
                 save_name = os.path.basename(img_name)
@@ -53,11 +50,9 @@ def convert(mat_name, key_name, split_name):
     print(f"\n✔ saved: {save_path}")
     print(f"total: {len(lines)}")
 
-
 def main():
     convert("traindata.mat", "traindata", "train")
     convert("testdata.mat", "testdata", "test")
-
 
 if __name__ == "__main__":
     main()

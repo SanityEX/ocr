@@ -12,7 +12,6 @@ from utils import (
     decode_attention
 )
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 
 LEVEL = "30"
@@ -35,7 +34,6 @@ transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
 ])
-
 
 def load_gt(path):
     data = {}
@@ -63,7 +61,6 @@ def load_gt(path):
 
     return data
 
-
 def clean_decode(seq):
     result = []
 
@@ -75,7 +72,6 @@ def clean_decode(seq):
             result.append(idx)
 
     return decode_attention(result).strip().upper()
-
 
 @torch.no_grad()
 def predict(model, image_path):
@@ -93,7 +89,6 @@ def predict(model, image_path):
     pred = pred.squeeze(0).cpu().tolist()
 
     return clean_decode(pred)
-
 
 def main():
 
@@ -176,7 +171,6 @@ def main():
             f"GT={gt} | "
             f"PRED={pred}"
         )
-
 
 if __name__ == "__main__":
     main()

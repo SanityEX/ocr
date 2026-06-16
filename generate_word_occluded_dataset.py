@@ -33,16 +33,13 @@ OCCLUSION_TYPES = ["partial", "partial", "partial", "full"]
 PARTIAL_DIRECTIONS = ["left", "right", "top", "bottom", "middle"]
 PARTIAL_RATIOS = [0.35, 0.5, 0.65]
 
-
 def reset_dir(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
 
-
 def ensure_dir(path):
     os.makedirs(path, exist_ok=True)
-
 
 def load_fonts(fonts_dir):
     fonts = []
@@ -57,7 +54,6 @@ def load_fonts(fonts_dir):
 
     return fonts
 
-
 def get_font(font_paths):
     if font_paths:
         return ImageFont.truetype(
@@ -66,7 +62,6 @@ def get_font(font_paths):
         )
 
     return ImageFont.load_default()
-
 
 def random_case(word):
     p = random.random()
@@ -78,7 +73,6 @@ def random_case(word):
     else:
         return word.capitalize()
 
-
 def generate_background():
     base = random.randint(215, 255)
     arr = np.ones((CANVAS_H, CANVAS_W), dtype=np.uint8) * base
@@ -87,7 +81,6 @@ def generate_background():
     arr = np.clip(arr + noise, 0, 255).astype(np.uint8)
 
     return Image.fromarray(arr, mode="L")
-
 
 def draw_text_with_char_boxes(text, font):
     bg = generate_background()
@@ -125,7 +118,6 @@ def draw_text_with_char_boxes(text, font):
         x += ch_w + random.randint(0, 2)
 
     return bg, char_boxes
-
 
 def apply_real_occlusion(img, char_boxes):
     valid_boxes = [
@@ -185,7 +177,6 @@ def apply_real_occlusion(img, char_boxes):
         "ratio": ratio
     }
 
-
 def degrade_image(img):
     if random.random() < 0.35:
         img = img.filter(
@@ -205,7 +196,6 @@ def degrade_image(img):
         )
 
     return img
-
 
 def crop_and_resize(img):
     arr = np.array(img)
@@ -229,7 +219,6 @@ def crop_and_resize(img):
 
     cropped = img.crop((x1, y1, x2 + 1, y2 + 1))
     return cropped.resize((IMG_W, IMG_H), Image.BICUBIC)
-
 
 def main():
     reset_dir(OUTPUT_DIR)
@@ -298,7 +287,6 @@ def main():
     print("labels:", labels_path)
     print("metadata:", meta_path)
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

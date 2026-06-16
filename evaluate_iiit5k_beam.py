@@ -8,17 +8,14 @@ from model import CRNN
 from utils import CHARS
 from decode_utils import greedy_decode_from_logits, ctc_beam_search_batch
 
-
 WEIGHTS_PATH = "best_crnn_iiit5k.pth"
 TEST_DIR = "iiit5k_easy/test"
 BEAM_WIDTH = 10
-
 
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
     return images, texts
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -88,7 +85,6 @@ def main():
     print(f"Beam correct:   {beam_correct}")
     print(f"Beam accuracy:  {beam_acc:.4f}")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     main()

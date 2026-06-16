@@ -1,7 +1,6 @@
 import os
 import random
 
-
 QC_TXT = r"D:\mnist_project\ocr1\char_occlusion_dataset_qc\labels.txt"
 QC_DIR = r"D:\mnist_project\ocr1\char_occlusion_dataset_qc\images"
 
@@ -15,7 +14,6 @@ OUTPUT_TXT = r"D:\mnist_project\ocr1\merge_train_qc_v2.txt"
 QC_LIMIT = 30000
 NORMAL_LIMIT = 10000
 ISTD_REPEAT = 3
-
 
 def read_labels(txt_path, img_dir=None):
     samples = []
@@ -54,7 +52,6 @@ def read_labels(txt_path, img_dir=None):
                 samples.append((path, label))
 
     return samples
-
 
 def main():
 
@@ -104,7 +101,6 @@ def main():
     print("total:", len(all_samples))
     print("saved:", OUTPUT_TXT)
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

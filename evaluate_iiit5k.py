@@ -8,7 +8,6 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import CHARS, decode_ctc
 
-
 WEIGHTS_CANDIDATES = [
     "best_crnn_iiit5k_dyn_acc.pth",
     "best_crnn_iiit5k_dyn_loss.pth",
@@ -22,14 +21,12 @@ IMG_H = 48
 MIN_W = 48
 MAX_W = 220
 
-
 def resize_keep_ratio(image, img_h=IMG_H, min_w=MIN_W, max_w=MAX_W):
     w, h = image.size
     new_w = max(1, int(w * img_h / h))
     new_w = max(min_w, min(new_w, max_w))
     image = image.resize((new_w, img_h))
     return image
-
 
 def collate_fn(batch):
     to_tensor = transforms.ToTensor()
@@ -56,7 +53,6 @@ def collate_fn(batch):
     images = torch.stack(padded_images, dim=0)
     return images, texts
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
     preds = logits.argmax(dim=2)
@@ -73,13 +69,11 @@ def greedy_decode(logits: torch.Tensor) -> list[str]:
         results.append(decode_ctc(indices))
     return results
 
-
 def choose_weights():
     for path in WEIGHTS_CANDIDATES:
         if os.path.exists(path):
             return path
     raise FileNotFoundError("No weights found.")
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -131,7 +125,6 @@ def main():
     print(f"Correct: {correct}")
     print(f"Accuracy: {acc:.4f}")
     print("=" * 50)
-
 
 if __name__ == "__main__":
     if not os.path.exists(TEST_DIR):

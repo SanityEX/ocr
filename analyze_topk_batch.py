@@ -12,7 +12,6 @@ from utils import (
     char_to_idx
 )
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 
 LEVEL = "30"
@@ -39,7 +38,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def load_gt(path):
     data = {}
 
@@ -65,7 +63,6 @@ def load_gt(path):
             data[name] = label
 
     return data
-
 
 @torch.no_grad()
 def predict_topk(model, image_path):
@@ -123,7 +120,6 @@ def predict_topk(model, image_path):
         )
 
     return topk_result
-
 
 def main():
 
@@ -280,7 +276,6 @@ def main():
 
     print("\n".join(lines))
     print("saved:", OUTPUT_TXT)
-
 
 if __name__ == "__main__":
     main()

@@ -14,7 +14,6 @@ from utils import (
     decode_attention
 )
 
-
 IMAGE_PATH = r"D:\mnist_project\ocr1\recognition\recognition\30\img_100.jpg"
 WEIGHTS = r"D:\mnist_project\ocr1\best_attention_istd_occlusion_acc.pth"
 
@@ -36,7 +35,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -46,7 +44,6 @@ def idx_to_text(idx):
         return idx_to_char.get(idx, "")
     return ""
 
-
 def clean_decode(seq):
     result = []
     for idx in seq:
@@ -55,7 +52,6 @@ def clean_decode(seq):
         if idx >= 3:
             result.append(idx)
     return decode_attention(result)
-
 
 @torch.no_grad()
 def predict_topk(model, image_path):
@@ -115,7 +111,6 @@ def predict_topk(model, image_path):
 
     return pred_text, topk_steps
 
-
 def build_uncertain_pattern(topk_steps):
     pattern = []
     uncertain_positions = []
@@ -144,7 +139,6 @@ def build_uncertain_pattern(topk_steps):
 
     return pattern, uncertain_positions
 
-
 def generate_candidates(pattern):
     beams = [("", 1.0)]
 
@@ -169,7 +163,6 @@ def generate_candidates(pattern):
 
     return beams
 
-
 def make_visual_expression(pattern):
     parts = []
 
@@ -181,7 +174,6 @@ def make_visual_expression(pattern):
             parts.append("[" + "/".join(chars) + "]")
 
     return "".join(parts)
-
 
 def main():
     print("device:", DEVICE)
@@ -243,7 +235,6 @@ def main():
 
     print("\n".join(lines))
     print("saved:", OUTPUT_TXT)
-
 
 if __name__ == "__main__":
     main()

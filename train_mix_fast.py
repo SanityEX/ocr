@@ -12,13 +12,10 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
-
 SAVE_ACC = "best_mix_acc.pth"
 SAVE_LOSS = "best_mix_loss.pth"
 CURVE = "curve_mix.json"
 
-
-# ===== collate =====
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
@@ -36,8 +33,6 @@ def collate_fn(batch):
 
     return images, texts, targets, target_lengths
 
-
-# ===== decode =====
 @torch.no_grad()
 def greedy_decode(logits):
     preds = logits.argmax(dim=2)
@@ -54,8 +49,6 @@ def greedy_decode(logits):
         results.append(decode_ctc(indices))
     return results
 
-
-# ===== train =====
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
     total_loss = 0
@@ -89,8 +82,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
 
     return total_loss / len(loader)
 
-
-# ===== validate =====
 @torch.no_grad()
 def validate(model, loader, criterion, device):
     model.eval()
@@ -128,8 +119,6 @@ def validate(model, loader, criterion, device):
 
     return total_loss / len(loader), correct / total
 
-
-# ===== main =====
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("device:", device)
@@ -139,7 +128,6 @@ def main():
         transforms.ToTensor()
     ])
 
-    # ===== 数据集 =====
     ds_iiit = OCRDataset("iiit5k_easy/train", transform=transform)
 
     ds_real = OCRDataset("data_realprint/train", transform=transform)
@@ -153,7 +141,6 @@ def main():
 
     val_dataset = OCRDataset("iiit5k_easy/val", transform=transform)
 
-    # 👉 控制realprint比例（避免太多）
     ds_real_small = torch.utils.data.Subset(
         ds_real,
         list(range(min(len(ds_real), 1000)))
@@ -220,7 +207,6 @@ def main():
         }, f)
 
     print("done.")
-
 
 if __name__ == "__main__":
     main()

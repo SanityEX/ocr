@@ -13,7 +13,6 @@ from utils import (
     idx_to_char
 )
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 GT_TXT = r"D:\mnist_project\ocr1\recognition\recognition\gt_recognition.txt"
 
@@ -38,7 +37,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 CONFUSION_PAIRS = {
     ("O", "0"), ("0", "O"),
     ("I", "1"), ("1", "I"),
@@ -58,7 +56,6 @@ CONFUSION_PAIRS = {
     ("G", "C"), ("C", "G"),
 }
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -68,14 +65,12 @@ def idx_to_text(idx):
         return idx_to_char.get(idx, "")
     return ""
 
-
 def normalize_text(text):
     result = []
     for ch in text.upper():
         if ch.isalnum():
             result.append(ch)
     return "".join(result)
-
 
 def load_gt(path):
     data = {}
@@ -100,7 +95,6 @@ def load_gt(path):
 
     return data
 
-
 def build_lexicon(gt_data):
     words = set()
 
@@ -111,7 +105,6 @@ def build_lexicon(gt_data):
             words.add(word)
 
     return sorted(words)
-
 
 def char_cost(a, b):
     if a == b:
@@ -127,7 +120,6 @@ def char_cost(a, b):
         return 1.0
 
     return 1.3
-
 
 def confusion_edit_distance(a, b):
     n = len(a)
@@ -150,7 +142,6 @@ def confusion_edit_distance(a, b):
             dp[i][j] = min(sub, delete, insert)
 
     return dp[n][m]
-
 
 @torch.no_grad()
 def predict_topk_probs(model, image_path):
@@ -209,7 +200,6 @@ def predict_topk_probs(model, image_path):
 
     return "".join(pred_chars), step_probs
 
-
 def visual_score_candidate(word, step_probs):
     if len(step_probs) == 0:
         return -1e9
@@ -254,7 +244,6 @@ def visual_score_candidate(word, step_probs):
 
     return score
 
-
 def rerank(pred, step_probs, lexicon):
     pred_norm = normalize_text(pred)
 
@@ -293,7 +282,6 @@ def rerank(pred, step_probs, lexicon):
     candidates.sort(key=lambda x: x[1], reverse=True)
 
     return candidates[0][0], candidates[:10]
-
 
 def main():
     print("device:", DEVICE)
@@ -418,7 +406,6 @@ def main():
                 f"visual={visual_score:.4f} "
                 f"edit={edit_cost:.2f}"
             )
-
 
 if __name__ == "__main__":
     main()

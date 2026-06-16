@@ -19,7 +19,6 @@ from utils import (
     decode_attention
 )
 
-
 TRAIN_TXT = r"D:\mnist_project\ocr1\istd_train_10_20_30.txt"
 
 VAL_LABEL_TXT = r"D:\mnist_project\ocr1\word_occluded_10k\labels.txt"
@@ -39,7 +38,6 @@ MAX_LABEL_LEN = 25
 EPOCHS = 8
 PATIENCE = 3
 LR = 5e-6
-
 
 class TxtOCRDataset(Dataset):
     def __init__(self, txt_path, transform=None, base_dir=None):
@@ -87,7 +85,6 @@ class TxtOCRDataset(Dataset):
 
         return img, label
 
-
 def train_transform():
     return transforms.Compose([
         transforms.Resize((IMG_H, IMG_W)),
@@ -101,13 +98,11 @@ def train_transform():
         transforms.ToTensor(),
     ])
 
-
 def val_transform():
     return transforms.Compose([
         transforms.Resize((IMG_H, IMG_W)),
         transforms.ToTensor(),
     ])
-
 
 def collate_fn(batch):
     images, texts = zip(*batch)
@@ -129,7 +124,6 @@ def collate_fn(batch):
 
     return images, texts, target
 
-
 def clean_decode(seq):
     result = []
 
@@ -142,7 +136,6 @@ def clean_decode(seq):
 
     return decode_attention(result)
 
-
 @torch.no_grad()
 def decode_batch(pred_tokens):
     results = []
@@ -151,7 +144,6 @@ def decode_batch(pred_tokens):
         results.append(clean_decode(seq))
 
     return results
-
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -184,7 +176,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate(model, loader, criterion, device):
@@ -230,7 +221,6 @@ def validate(model, loader, criterion, device):
             total += 1
 
     return total_loss / len(loader), correct / total if total > 0 else 0.0
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -373,7 +363,6 @@ def main():
     print("\nISTD Fine-tune finished.")
     print("Best val acc:", best_val_acc)
     print("Recommended weights:", SAVE_ACC)
-
 
 if __name__ == "__main__":
     main()

@@ -6,18 +6,13 @@ from torchvision import transforms
 from model import CRNN
 from utils import decode_ctc, CHARS
 
-
-# ========= 配置 =========
-WEIGHTS = "best_crnn_iiit5k_mix2_acc.pth"   # 改成你的模型
-IMG_PATH = "data/test/images/point.png"                       # 改成你的图片
-
+WEIGHTS = "best_crnn_iiit5k_mix2_acc.pth"
+IMG_PATH = "data/test/images/point.png"
 
 IMG_H = 48
 MIN_W = 48
 MAX_W = 256
 
-
-# ========= 预处理 =========
 def resize_keep_ratio(image):
     w, h = image.size
     new_w = max(1, int(w * IMG_H / h))
@@ -25,21 +20,18 @@ def resize_keep_ratio(image):
     image = image.resize((new_w, IMG_H), Image.BICUBIC)
     return image
 
-
 def preprocess(image_path):
     image = Image.open(image_path).convert("L")
     image = resize_keep_ratio(image)
 
-    tensor = transforms.ToTensor()(image)   # [1, H, W]
-    tensor = tensor.unsqueeze(0)            # [1, 1, H, W]
+    tensor = transforms.ToTensor()(image)
+    tensor = tensor.unsqueeze(0)
 
     return tensor
 
-
-# ========= decode =========
 def greedy_decode(logits):
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -53,8 +45,6 @@ def greedy_decode(logits):
 
     return results
 
-
-# ========= 主函数 =========
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("device:", device)
@@ -75,7 +65,6 @@ def main():
     print("\n===== RESULT =====")
     print("image:", IMG_PATH)
     print("pred :", preds[0])
-
 
 if __name__ == "__main__":
     main()

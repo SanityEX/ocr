@@ -15,10 +15,6 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
-
-# =========================
-# 配置
-# =========================
 IMG_H = 48
 MIN_W = 48
 MAX_W = 256
@@ -34,17 +30,12 @@ SAVE_WEIGHTS_PHASE1_LOSS = "best_phase1_loss.pth"
 SAVE_WEIGHTS_PHASE2_ACC = "best_phase2_acc.pth"
 SAVE_WEIGHTS_PHASE2_LOSS = "best_phase2_loss.pth"
 
-
-# =========================
-# 图像处理
-# =========================
 def resize_keep_ratio(image, img_h=IMG_H, min_w=MIN_W, max_w=MAX_W):
     w, h = image.size
     new_w = max(1, int(w * img_h / h))
     new_w = max(min_w, min(new_w, max_w))
     image = image.resize((new_w, img_h), Image.BICUBIC)
     return image
-
 
 def augment_image(image):
     if random.random() < 0.7:
@@ -74,7 +65,6 @@ def augment_image(image):
 
     return image
 
-
 def make_collate_fn(is_train=True):
     to_tensor = transforms.ToTensor()
 
@@ -90,7 +80,7 @@ def make_collate_fn(is_train=True):
             if is_train:
                 image = augment_image(image)
 
-            tensor = to_tensor(image)   # [1, H, W]
+            tensor = to_tensor(image)
             processed.append(tensor)
             widths.append(tensor.shape[-1])
 
@@ -120,14 +110,10 @@ def make_collate_fn(is_train=True):
 
     return collate_fn
 
-
-# =========================
-# 解码
-# =========================
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -140,10 +126,6 @@ def greedy_decode(logits: torch.Tensor) -> list[str]:
         results.append(decode_ctc(indices))
     return results
 
-
-# =========================
-# 难样本/长样本重采样
-# =========================
 def sample_weight_from_text(text: str) -> float:
     """
     越难的样本权重越高：
@@ -167,19 +149,17 @@ def sample_weight_from_text(text: str) -> float:
 
     return w
 
-
 def build_weighted_sampler_from_concat_dataset(concat_dataset: ConcatDataset):
     weights = []
 
     for dataset in concat_dataset.datasets:
-        # OCRDataset.samples: [(filename, text), ...]
+
         for _, text in dataset.samples:
             weights.append(sample_weight_from_text(text))
 
     weights = torch.tensor(weights, dtype=torch.double)
     sampler = WeightedRandomSampler(weights=weights, num_samples=len(weights), replacement=True)
     return sampler
-
 
 def build_weighted_sampler_from_dataset(dataset: OCRDataset):
     weights = []
@@ -190,10 +170,6 @@ def build_weighted_sampler_from_dataset(dataset: OCRDataset):
     sampler = WeightedRandomSampler(weights=weights, num_samples=len(weights), replacement=True)
     return sampler
 
-
-# =========================
-# 训练/验证
-# =========================
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
     total_loss = 0.0
@@ -226,7 +202,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate_one_epoch(model, loader, criterion, device):
@@ -273,10 +248,6 @@ def validate_one_epoch(model, loader, criterion, device):
     acc = correct / total if total > 0 else 0.0
     return avg_loss, acc
 
-
-# =========================
-# 预训练权重加载
-# =========================
 def load_pretrained_partial(model, device):
     candidates = [
         "best_crnn_iiit5k_mix2_acc.pth",
@@ -320,10 +291,6 @@ def load_pretrained_partial(model, device):
 
     print("[WARN] no pretrained weights found, training from scratch.")
 
-
-# =========================
-# 单阶段训练执行器
-# =========================
 def run_training_stage(
     stage_name,
     model,
@@ -397,15 +364,10 @@ def run_training_stage(
 
     return model, best_val_acc, best_val_loss
 
-
-# =========================
-# 主函数
-# =========================
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("device:", device)
 
-    # ========= 数据 =========
     if not os.path.exists("iiit5k_alnum/train") or not os.path.exists("iiit5k_alnum/val"):
         raise FileNotFoundError("Please prepare iiit5k_alnum first.")
 
@@ -431,7 +393,6 @@ def main():
     print("phase1 total train samples:", len(phase1_train_dataset))
     print("val samples:", len(iiit_val_dataset))
 
-    # ========= DataLoader =========
     phase1_sampler = build_weighted_sampler_from_concat_dataset(phase1_train_dataset)
     phase2_sampler = build_weighted_sampler_from_dataset(iiit_train_dataset)
 
@@ -456,13 +417,11 @@ def main():
         collate_fn=make_collate_fn(is_train=False)
     )
 
-    # ========= 模型 =========
     num_classes = len(CHARS) + 1
     model = CRNN(num_classes=num_classes).to(device)
 
     load_pretrained_partial(model, device)
 
-    # ========= 阶段1：混合训练 =========
     model, _, _ = run_training_stage(
         stage_name="PHASE1_MIXED",
         model=model,
@@ -476,7 +435,6 @@ def main():
         patience=PATIENCE
     )
 
-    # ========= 阶段2：目标域微调 =========
     model, _, _ = run_training_stage(
         stage_name="PHASE2_IIIT_FINETUNE",
         model=model,
@@ -494,7 +452,6 @@ def main():
     print("Recommended final weights:")
     print(f"- {SAVE_WEIGHTS_PHASE2_ACC}")
     print(f"- {SAVE_WEIGHTS_PHASE2_LOSS}")
-
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,6 @@ import string
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
-
 SAVE_DIR = r"D:\mnist_project\ocr1\char_occlusion_dataset_qc"
 IMG_DIR = os.path.join(SAVE_DIR, "images")
 LABEL_PATH = os.path.join(SAVE_DIR, "labels.txt")
@@ -53,12 +52,10 @@ MASK_MODES = [
     "small_patch"
 ]
 
-
 def reset_dir(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
-
 
 def load_fonts(font_dir):
     fonts = []
@@ -68,19 +65,16 @@ def load_fonts(font_dir):
                 fonts.append(os.path.join(font_dir, f))
     return fonts
 
-
 def get_font(fonts):
     size = random.randint(FONT_SIZE_MIN, FONT_SIZE_MAX)
     if fonts:
         return ImageFont.truetype(random.choice(fonts), size)
     return ImageFont.truetype(r"C:\Windows\Fonts\arial.ttf", size)
 
-
 def random_word():
     if random.random() < 0.9:
         return random.choice(WORDS)
     return "".join(random.choice(string.ascii_uppercase) for _ in range(random.randint(4, 9)))
-
 
 def draw_word(text, font):
     img = Image.new("L", (IMG_W, IMG_H), 255)
@@ -95,7 +89,6 @@ def draw_word(text, font):
 
     draw.text((x, y), text, fill=random.randint(0, 35), font=font)
     return img
-
 
 def make_mask_box():
     mode = random.choice(MASK_MODES)
@@ -150,7 +143,6 @@ def make_mask_box():
 
     return mode, (x, y, x + w, y + h)
 
-
 def apply_occlusion(original):
     occ = original.copy()
     draw = ImageDraw.Draw(occ)
@@ -164,7 +156,6 @@ def apply_occlusion(original):
         boxes.append((mode, box))
 
     return occ, boxes
-
 
 def calc_quality(original, occluded):
     orig_arr = np.array(original)
@@ -187,7 +178,6 @@ def calc_quality(original, occluded):
 
     return erase_ratio, remain_ratio
 
-
 def degrade(img):
     if random.random() < 0.25:
         img = img.filter(ImageFilter.GaussianBlur(radius=random.uniform(0.2, 0.7)))
@@ -199,7 +189,6 @@ def degrade(img):
         img = ImageEnhance.Brightness(img).enhance(random.uniform(0.90, 1.10))
 
     return img
-
 
 def main():
     reset_dir(SAVE_DIR)
@@ -258,7 +247,6 @@ def main():
     print("trials:", trials)
     print("save:", SAVE_DIR)
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

@@ -15,14 +15,12 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
-
 SAVE_WEIGHTS_LOSS = "best_crnn_iiit5k_mix2_loss.pth"
 SAVE_WEIGHTS_ACC = "best_crnn_iiit5k_mix2_acc.pth"
 
 IMG_H = 48
 MIN_W = 48
 MAX_W = 256
-
 
 def resize_keep_ratio(image, img_h=IMG_H, min_w=MIN_W, max_w=MAX_W):
     w, h = image.size
@@ -31,14 +29,12 @@ def resize_keep_ratio(image, img_h=IMG_H, min_w=MIN_W, max_w=MAX_W):
     image = image.resize((new_w, img_h), Image.BICUBIC)
     return image
 
-
 def augment_image(image):
-    # 轻量旋转
+
     if random.random() < 0.7:
         angle = random.uniform(-4, 4)
         image = image.rotate(angle, resample=Image.BICUBIC, expand=False, fillcolor=255)
 
-    # 轻量平移/缩放/剪切
     if random.random() < 0.5:
         dx = random.uniform(-0.05, 0.05) * image.size[0]
         dy = random.uniform(-0.03, 0.03) * image.size[1]
@@ -51,18 +47,15 @@ def augment_image(image):
             fill=255
         )
 
-    # 模糊
     if random.random() < 0.25:
         image = image.filter(ImageFilter.GaussianBlur(radius=random.uniform(0.2, 0.8)))
 
-    # 亮度/对比度
     if random.random() < 0.4:
         image = transforms.functional.adjust_brightness(image, random.uniform(0.9, 1.1))
     if random.random() < 0.4:
         image = transforms.functional.adjust_contrast(image, random.uniform(0.9, 1.15))
 
     return image
-
 
 def make_collate_fn(is_train=True):
     to_tensor = transforms.ToTensor()
@@ -79,7 +72,7 @@ def make_collate_fn(is_train=True):
             if is_train:
                 image = augment_image(image)
 
-            tensor = to_tensor(image)   # [1, H, W]
+            tensor = to_tensor(image)
             processed.append(tensor)
             widths.append(tensor.shape[-1])
 
@@ -109,11 +102,10 @@ def make_collate_fn(is_train=True):
 
     return collate_fn
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -125,7 +117,6 @@ def greedy_decode(logits: torch.Tensor) -> list[str]:
             prev = idx
         results.append(decode_ctc(indices))
     return results
-
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -159,7 +150,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate_one_epoch(model, loader, criterion, device):
@@ -206,7 +196,6 @@ def validate_one_epoch(model, loader, criterion, device):
     acc = correct / total if total > 0 else 0.0
     return avg_loss, acc
 
-
 def load_pretrained_partial(model, device):
     candidates = [
         "best_crnn_iiit5k_dyn_acc.pth",
@@ -249,20 +238,16 @@ def load_pretrained_partial(model, device):
 
     print("[WARN] no pretrained weights found, training from scratch.")
 
-
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("device:", device)
 
-    # 主训练集1：IIIT5K alnum
     iiit_train_dataset = OCRDataset("iiit5k_alnum/train", transform=None)
 
-    # 主训练集2：新的更强合成集
     realprint_alnum_train_dataset = OCRDataset("data_realprint_alnum/train", transform=None)
 
     datasets = [iiit_train_dataset, realprint_alnum_train_dataset]
 
-    # 可选：保留旧版 realprint
     if os.path.exists("data_realprint/train"):
         old_realprint_train_dataset = OCRDataset("data_realprint/train", transform=None)
         datasets.append(old_realprint_train_dataset)
@@ -270,7 +255,6 @@ def main():
 
     train_dataset = ConcatDataset(datasets)
 
-    # 验证集只看 IIIT5K
     val_dataset = OCRDataset("iiit5k_alnum/val", transform=None)
 
     print("iiit train samples:", len(iiit_train_dataset))
@@ -377,7 +361,6 @@ def main():
     print(f"best val_loss: {best_val_loss:.4f}")
     print(f"best val_acc: {best_val_acc:.4f}")
     print("curve saved to: curve.json")
-
 
 if __name__ == "__main__":
     if not os.path.exists("iiit5k_alnum/train") or not os.path.exists("iiit5k_alnum/val"):

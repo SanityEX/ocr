@@ -1,7 +1,6 @@
 import os
 import random
 
-
 QC_TXT = r"D:\mnist_project\ocr1\char_occlusion_dataset_qc\labels.txt"
 QC_DIR = r"D:\mnist_project\ocr1\char_occlusion_dataset_qc\images"
 
@@ -11,7 +10,6 @@ OUTPUT_TXT = r"D:\mnist_project\ocr1\merge_train_qc.txt"
 
 QC_LIMIT = 30000
 ISTD_REPEAT = 2
-
 
 def read_labels(txt_path, img_dir=None):
     samples = []
@@ -43,7 +41,6 @@ def read_labels(txt_path, img_dir=None):
 
     return samples
 
-
 def main():
     qc = read_labels(QC_TXT, QC_DIR)
     random.shuffle(qc)
@@ -65,7 +62,6 @@ def main():
     print("total:", len(all_samples))
     print("saved:", OUTPUT_TXT)
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

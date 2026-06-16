@@ -9,7 +9,6 @@ from torchvision import transforms
 from model_attention_ocr import AttentionOCR
 from utils import VOCAB_SIZE, SOS_IDX, EOS_IDX, decode_attention
 
-
 LABELS = r"D:\mnist_project\ocr1\word_occluded_10k\labels.txt"
 IMG_DIR = r"D:\mnist_project\ocr1\word_occluded_10k\images"
 META_CSV = r"D:\mnist_project\ocr1\word_occluded_10k\metadata.csv"
@@ -23,12 +22,10 @@ MAX_LEN = 25
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
 ])
-
 
 def clean_decode(seq):
     result = []
@@ -38,7 +35,6 @@ def clean_decode(seq):
         if idx >= 3:
             result.append(idx)
     return decode_attention(result).strip().upper()
-
 
 def load_labels(path):
     data = {}
@@ -61,7 +57,6 @@ def load_labels(path):
 
     return data
 
-
 def load_meta(path):
     data = {}
 
@@ -73,7 +68,6 @@ def load_meta(path):
             data[name] = row
 
     return data
-
 
 @torch.no_grad()
 def predict_one(model, img_path):
@@ -89,18 +83,15 @@ def predict_one(model, img_path):
 
     return clean_decode(pred.squeeze(0).cpu().tolist())
 
-
 def update_stat(stat, key, ok):
     stat[key]["total"] += 1
     if ok:
         stat[key]["correct"] += 1
 
-
 def acc(item):
     if item["total"] == 0:
         return 0
     return item["correct"] / item["total"]
-
 
 def format_stat(title, stat):
     lines = []
@@ -115,7 +106,6 @@ def format_stat(title, stat):
         )
 
     return lines
-
 
 def main():
     print("device:", DEVICE)
@@ -228,7 +218,6 @@ def main():
     print(f"Accuracy: {correct / total:.4f}")
     print("saved:", OUT_TXT)
     print("=" * 60)
-
 
 if __name__ == "__main__":
     main()

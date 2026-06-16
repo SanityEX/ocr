@@ -17,7 +17,6 @@ from utils import (
     encode_text_attention, decode_attention
 )
 
-
 IMG_H = 48
 IMG_W = 192
 BATCH_SIZE = 20
@@ -42,7 +41,6 @@ SAVE_PHASE2_LOSS = "best_attention_v2_phase2_loss.pth"
 
 CURVE_PHASE1 = "curve_attention_merge_phase1.json"
 CURVE_PHASE2 = "curve_attention_merge_phase2.json"
-
 
 class TxtOCRDataset(Dataset):
     def __init__(self, txt_path, transform=None, base_dir=None):
@@ -88,7 +86,6 @@ class TxtOCRDataset(Dataset):
 
         return img, label
 
-
 def train_transform_medium():
     return transforms.Compose([
         transforms.Resize((IMG_H, IMG_W)),
@@ -103,7 +100,6 @@ def train_transform_medium():
         transforms.ToTensor(),
     ])
 
-
 def train_transform_light():
     return transforms.Compose([
         transforms.Resize((IMG_H, IMG_W)),
@@ -112,13 +108,11 @@ def train_transform_light():
         transforms.ToTensor(),
     ])
 
-
 def val_transform():
     return transforms.Compose([
         transforms.Resize((IMG_H, IMG_W)),
         transforms.ToTensor(),
     ])
-
 
 def collate_fn(batch):
     images, texts = zip(*batch)
@@ -135,7 +129,6 @@ def collate_fn(batch):
     target = torch.tensor(padded, dtype=torch.long)
     return images, texts, target
 
-
 def clean_decode(seq):
     result = []
     for idx in seq:
@@ -145,14 +138,12 @@ def clean_decode(seq):
             result.append(idx)
     return decode_attention(result)
 
-
 @torch.no_grad()
 def decode_batch(pred_tokens):
     results = []
     for seq in pred_tokens.cpu().tolist():
         results.append(clean_decode(seq))
     return results
-
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -184,7 +175,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate_one_epoch(model, loader, criterion, device):
@@ -230,7 +220,6 @@ def validate_one_epoch(model, loader, criterion, device):
             total += 1
 
     return total_loss / len(loader), correct / total if total > 0 else 0.0
-
 
 def run_stage(
     stage_name,
@@ -323,7 +312,6 @@ def run_stage(
 
     return model
 
-
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("device:", device)
@@ -414,7 +402,6 @@ def main():
     print("Recommended final weights:")
     print(SAVE_PHASE2_ACC)
     print(SAVE_PHASE2_LOSS)
-
 
 if __name__ == "__main__":
     main()

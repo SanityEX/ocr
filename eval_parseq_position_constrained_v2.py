@@ -7,11 +7,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-
-# ============================================================
-# 路径设置
-# ============================================================
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 
 GT_TXT = (
@@ -26,11 +21,6 @@ OUTPUT_CSV = (
     r"\parseq_position_constrained_v2_result.csv"
 )
 
-
-# ============================================================
-# 模型与图像设置
-# ============================================================
-
 IMG_H = 32
 IMG_W = 128
 
@@ -40,48 +30,23 @@ DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
 )
 
-
-# ============================================================
-# Recovery 参数
-# ============================================================
-
-# 低于该值的字符允许被修改
 LOW_CONF_THRESHOLD = 0.88
 
-# 特别低置信度：允许更广泛的替换
 VERY_LOW_CONF_THRESHOLD = 0.58
 
-# 平均置信度很高时，避免不必要修改
 HIGH_AVG_CONF_THRESHOLD = 0.965
 
-# 候选最多允许修改几个字符
 MAX_REPLACE_COUNT = 3
 
-# 最佳候选和第二候选的分数差至少达到此值才采用
 MIN_CANDIDATE_MARGIN = 0.12
 
-# 最佳候选的最大修改成本
 MAX_ACCEPT_COST = 1.65
 
-# 修改后的候选必须达到的最低字符重合度
 MIN_CHAR_OVERLAP = 0.65
 
-# 是否使用完整GT词表进行闭集测试
-# 注意：True属于closed-set lexicon evaluation
 USE_GT_LEXICON = True
 
-# 也可以使用自己的外部词表，每行一个词
 EXTERNAL_LEXICON_TXT = None
-
-# 示例：
-# EXTERNAL_LEXICON_TXT = (
-#     r"D:\mnist_project\ocr1\my_lexicon.txt"
-# )
-
-
-# ============================================================
-# 字符混淆组
-# ============================================================
 
 CONFUSION_GROUPS = [
     set("I1L"),
@@ -104,11 +69,6 @@ for group in CONFUSION_GROUPS:
     for ch in group:
         CONFUSION_MAP.setdefault(ch, set()).update(group)
 
-
-# ============================================================
-# 图像预处理
-# ============================================================
-
 transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
@@ -118,11 +78,6 @@ transform = transforms.Compose([
     ),
 ])
 
-
-# ============================================================
-# 文本工具
-# ============================================================
-
 def normalize_text(text: str) -> str:
     """
     只保留英文数字，并转换为大写。
@@ -131,7 +86,6 @@ def normalize_text(text: str) -> str:
         ch for ch in text.upper()
         if ch.isalnum()
     )
-
 
 def load_gt(path: str) -> Dict[str, str]:
     """
@@ -174,7 +128,6 @@ def load_gt(path: str) -> Dict[str, str]:
 
     return data
 
-
 def load_external_lexicon(
     path: str,
 ) -> List[str]:
@@ -193,7 +146,6 @@ def load_external_lexicon(
                 words.add(word)
 
     return sorted(words)
-
 
 def build_lexicon(
     gt_data: Dict[str, str],
@@ -224,7 +176,6 @@ def build_lexicon(
 
     return sorted(words)
 
-
 def build_length_index(
     lexicon: Sequence[str],
 ) -> Dict[int, List[str]]:
@@ -237,7 +188,6 @@ def build_length_index(
         index.setdefault(len(word), []).append(word)
 
     return index
-
 
 def char_overlap(a: str, b: str) -> float:
     """
@@ -253,7 +203,6 @@ def char_overlap(a: str, b: str) -> float:
 
     return common / max(len(a), len(b), 1)
 
-
 def is_same_char_type(a: str, b: str) -> bool:
     """
     判断两个字符是否同为数字或同为字母。
@@ -266,7 +215,6 @@ def is_same_char_type(a: str, b: str) -> bool:
 
     return False
 
-
 def is_confusion_pair(a: str, b: str) -> bool:
     """
     判断两个字符是否属于视觉相似字符。
@@ -275,11 +223,6 @@ def is_confusion_pair(a: str, b: str) -> bool:
         return True
 
     return b in CONFUSION_MAP.get(a, set())
-
-
-# ============================================================
-# 候选约束与评分
-# ============================================================
 
 def get_low_conf_positions(
     pred: str,
@@ -301,7 +244,6 @@ def get_low_conf_positions(
 
     return low_positions
 
-
 def count_differences(
     word: str,
     pred: str,
@@ -310,7 +252,6 @@ def count_differences(
         a != b
         for a, b in zip(word, pred)
     )
-
 
 def candidate_is_valid(
     word: str,
@@ -344,7 +285,6 @@ def candidate_is_valid(
         if replace_count > MAX_REPLACE_COUNT:
             return False
 
-        # 高置信度位置禁止修改
         if i not in low_positions:
             return False
 
@@ -354,7 +294,6 @@ def candidate_is_valid(
             else 1.0
         )
 
-        # 字母和数字类型不同，仅极低置信度时允许
         if not is_same_char_type(
             pred_ch,
             word_ch,
@@ -362,7 +301,6 @@ def candidate_is_valid(
             if confidence >= VERY_LOW_CONF_THRESHOLD:
                 return False
 
-        # 中等低置信度位置只能改成视觉相似字符
         if confidence >= VERY_LOW_CONF_THRESHOLD:
             if not is_confusion_pair(
                 pred_ch,
@@ -371,7 +309,6 @@ def candidate_is_valid(
                 return False
 
     return replace_count > 0
-
 
 def substitution_cost(
     pred_ch: str,
@@ -392,11 +329,9 @@ def substitution_cost(
     else:
         base_cost = 1.15
 
-    # 低置信度字符修改成本下降
     confidence_factor = 0.45 + confidence
 
     return base_cost * confidence_factor
-
 
 def candidate_cost(
     word: str,
@@ -425,13 +360,11 @@ def candidate_cost(
 
     overlap = char_overlap(word, pred)
 
-    # 字符重合越高，成本越低
     overlap_bonus = overlap * 0.20
 
     total_cost -= overlap_bonus
 
     return total_cost
-
 
 def position_constrained_recover(
     pred: str,
@@ -469,7 +402,6 @@ def position_constrained_recover(
         default=1.0,
     )
 
-    # 整体置信度极高，且没有明显低置信度字符时不修改
     if (
         avg_conf >= HIGH_AVG_CONF_THRESHOLD
         and min_conf >= VERY_LOW_CONF_THRESHOLD
@@ -525,9 +457,9 @@ def position_constrained_recover(
 
     candidates.sort(
         key=lambda item: (
-            item[1],   # cost越低越好
-            item[2],   # 修改数量越少越好
-            -item[3],  # overlap越高越好
+            item[1],
+            item[2],
+            -item[3],
             item[0],
         )
     )
@@ -541,11 +473,9 @@ def position_constrained_recover(
     else:
         margin = 999.0
 
-    # 成本过大，不采用
     if best_cost > MAX_ACCEPT_COST:
         return pred, candidates[:5], low_positions
 
-    # 最佳候选优势不足，不采用
     if margin < MIN_CANDIDATE_MARGIN:
         return pred, candidates[:5], low_positions
 
@@ -554,11 +484,6 @@ def position_constrained_recover(
         candidates[:5],
         low_positions,
     )
-
-
-# ============================================================
-# PARSeq 模型
-# ============================================================
 
 class PARSeqPositionConstrainedOCR:
     def __init__(self, device: torch.device):
@@ -628,11 +553,6 @@ class PARSeqPositionConstrainedOCR:
             confidence_list,
             avg_conf,
         )
-
-
-# ============================================================
-# 单等级评估
-# ============================================================
 
 def evaluate_level(
     model: PARSeqPositionConstrainedOCR,
@@ -817,11 +737,6 @@ def evaluate_level(
         "csv_rows": csv_rows,
     }
 
-
-# ============================================================
-# 输出
-# ============================================================
-
 def print_wrong_examples(
     wrong_examples: Sequence[Dict],
 ) -> None:
@@ -870,7 +785,6 @@ def print_wrong_examples(
                     f"overlap={overlap:.2f}"
                 )
 
-
 def save_csv(rows: Sequence[Dict]) -> None:
     output_dir = os.path.dirname(
         OUTPUT_CSV
@@ -908,11 +822,6 @@ def save_csv(rows: Sequence[Dict]) -> None:
 
         writer.writeheader()
         writer.writerows(rows)
-
-
-# ============================================================
-# 主程序
-# ============================================================
 
 def main() -> None:
     print("device:", DEVICE)
@@ -1024,7 +933,6 @@ def main() -> None:
     print("DONE")
     print("saved:", OUTPUT_CSV)
     print("=" * 72)
-
 
 if __name__ == "__main__":
     main()

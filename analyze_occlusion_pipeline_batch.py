@@ -15,7 +15,6 @@ from utils import (
     decode_attention
 )
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 LEVEL = "30"
 GT_TXT = r"D:\mnist_project\ocr1\recognition\recognition\gt_recognition.txt"
@@ -38,7 +37,6 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-
 def idx_to_text(idx):
     if idx == EOS_IDX:
         return "<EOS>"
@@ -47,7 +45,6 @@ def idx_to_text(idx):
     if idx >= 3:
         return idx_to_char.get(idx, "")
     return ""
-
 
 def load_gt(path):
     data = {}
@@ -72,7 +69,6 @@ def load_gt(path):
 
     return data
 
-
 def clean_decode(seq):
     result = []
 
@@ -84,7 +80,6 @@ def clean_decode(seq):
             result.append(idx)
 
     return decode_attention(result).strip().upper()
-
 
 @torch.no_grad()
 def predict_topk(model, image_path):
@@ -144,7 +139,6 @@ def predict_topk(model, image_path):
 
     return pred_text, topk_steps
 
-
 def build_uncertain_expression(topk_steps):
     parts = []
     uncertain_positions = []
@@ -163,7 +157,6 @@ def build_uncertain_expression(topk_steps):
             uncertain_positions.append(i)
 
     return "".join(parts), uncertain_positions
-
 
 def detect_errors(gt, pred):
     matcher = difflib.SequenceMatcher(None, gt, pred)
@@ -199,7 +192,6 @@ def detect_errors(gt, pred):
 
     return results
 
-
 def generate_candidates(topk_steps, max_candidates=10):
     beams = [("", 1.0)]
 
@@ -225,7 +217,6 @@ def generate_candidates(topk_steps, max_candidates=10):
 
     return beams
 
-
 def format_topk_for_position(topk_steps, pos):
     if pos < 0 or pos >= len(topk_steps):
         return ""
@@ -236,7 +227,6 @@ def format_topk_for_position(topk_steps, pos):
         items.append(f"{char}:{prob:.4f}")
 
     return " / ".join(items)
-
 
 def main():
     print("device:", DEVICE)
@@ -422,7 +412,6 @@ def main():
     print("\n".join(summary))
     print("saved:", OUTPUT_TXT)
     print("saved:", OUTPUT_CSV)
-
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,6 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
-
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
@@ -27,17 +26,15 @@ def collate_fn(batch):
 
     return images, texts, targets, target_lengths
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
         results.append(decode_ctc(seq.cpu().tolist()))
     return results
-
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -70,7 +67,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate_one_epoch(model, loader, criterion, device):
@@ -113,7 +109,6 @@ def validate_one_epoch(model, loader, criterion, device):
     avg_loss = total_loss / len(loader)
     acc = correct / total if total > 0 else 0.0
     return avg_loss, acc
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -172,7 +167,6 @@ def main():
             print("best model saved: best_crnn_easy.pth")
 
     print("training finished.")
-
 
 if __name__ == "__main__":
     if not os.path.exists("data_easy/train") or not os.path.exists("data_easy/val"):

@@ -9,11 +9,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-
-# ============================================================
-# 路径设置
-# ============================================================
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 
 GT_TXT = (
@@ -28,11 +23,6 @@ OUTPUT_CSV = (
     r"\parseq_hybrid_occlusion_recovery_v3_result.csv"
 )
 
-
-# ============================================================
-# 模型和图像参数
-# ============================================================
-
 IMG_H = 32
 IMG_W = 128
 MAX_TEXT_LEN = 25
@@ -40,11 +30,6 @@ MAX_TEXT_LEN = 25
 DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
 )
-
-
-# ============================================================
-# Recovery 参数
-# ============================================================
 
 LOW_CONF_THRESHOLD = 0.88
 VERY_LOW_CONF_THRESHOLD = 0.55
@@ -83,11 +68,6 @@ EXTERNAL_LEXICON_TXT = None
 
 PRINT_WRONG_LIMIT = 30
 
-
-# ============================================================
-# 字符混淆组
-# ============================================================
-
 CONFUSION_GROUPS = [
     set("I1LT"),
     set("O0QDCG"),
@@ -108,11 +88,6 @@ for group in CONFUSION_GROUPS:
     for ch in group:
         CONFUSION_MAP.setdefault(ch, set()).update(group)
 
-
-# ============================================================
-# 图像预处理
-# ============================================================
-
 transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
@@ -121,11 +96,6 @@ transform = transforms.Compose([
         std=[0.5, 0.5, 0.5],
     ),
 ])
-
-
-# ============================================================
-# 数据结构
-# ============================================================
 
 @dataclass
 class AlignmentResult:
@@ -136,7 +106,6 @@ class AlignmentResult:
     high_conf_breaks: int
     low_conf_edits: int
     operations: List[Tuple]
-
 
 @dataclass
 class CandidateResult:
@@ -152,17 +121,11 @@ class CandidateResult:
     low_conf_edits: int
     operations: List[Tuple]
 
-
-# ============================================================
-# 文本工具
-# ============================================================
-
 def normalize_text(text: str) -> str:
     return "".join(
         ch for ch in text.upper()
         if ch.isalnum()
     )
-
 
 def load_gt(path: str) -> Dict[str, str]:
     if not os.path.exists(path):
@@ -197,7 +160,6 @@ def load_gt(path: str) -> Dict[str, str]:
 
     return data
 
-
 def load_external_lexicon(path: str) -> List[str]:
     if not os.path.exists(path):
         raise FileNotFoundError(
@@ -214,7 +176,6 @@ def load_external_lexicon(path: str) -> List[str]:
                 words.add(word)
 
     return sorted(words)
-
 
 def build_lexicon(
     gt_data: Dict[str, str],
@@ -237,7 +198,6 @@ def build_lexicon(
 
     return sorted(words)
 
-
 def build_length_index(
     lexicon: Sequence[str],
 ) -> Dict[int, List[str]]:
@@ -247,7 +207,6 @@ def build_length_index(
         index.setdefault(len(word), []).append(word)
 
     return index
-
 
 def char_overlap(a: str, b: str) -> float:
     ca = Counter(a)
@@ -259,7 +218,6 @@ def char_overlap(a: str, b: str) -> float:
     )
 
     return common / max(len(a), len(b), 1)
-
 
 def lcs_length(a: str, b: str) -> int:
     n = len(a)
@@ -283,17 +241,14 @@ def lcs_length(a: str, b: str) -> int:
 
     return previous[m]
 
-
 def order_match_score(a: str, b: str) -> float:
     return lcs_length(a, b) / max(len(a), len(b), 1)
-
 
 def is_confusion_pair(a: str, b: str) -> bool:
     if a == b:
         return True
 
     return b in CONFUSION_MAP.get(a, set())
-
 
 def is_same_char_type(a: str, b: str) -> bool:
     if a.isalpha() and b.isalpha():
@@ -304,7 +259,6 @@ def is_same_char_type(a: str, b: str) -> bool:
 
     return False
 
-
 def safe_confidence(
     confidences: Sequence[float],
     index: int,
@@ -313,7 +267,6 @@ def safe_confidence(
         return float(confidences[index])
 
     return 0.50
-
 
 def get_low_positions(
     pred: str,
@@ -331,11 +284,6 @@ def get_low_positions(
             positions.add(i)
 
     return positions
-
-
-# ============================================================
-# 编辑成本
-# ============================================================
 
 def replacement_cost(
     pred_char: str,
@@ -376,7 +324,6 @@ def replacement_cost(
         low_edit = True
 
     return max(base, 0.02), high_break, low_edit
-
 
 def insertion_cost(
     pred: str,
@@ -424,7 +371,6 @@ def insertion_cost(
 
     return max(cost, 0.05), low_edit
 
-
 def deletion_cost(
     pred: str,
     pred_index: int,
@@ -452,11 +398,9 @@ def deletion_cost(
         cost -= VERY_LOW_CONF_EDIT_BONUS
         low_edit = True
 
-    # 词尾低置信度字符更可能是多余输出
     if pred_index == len(pred) - 1:
         cost -= 0.20
 
-    # 重复字符删除成本降低
     if (
         pred_index > 0
         and pred[pred_index] == pred[pred_index - 1]
@@ -464,11 +408,6 @@ def deletion_cost(
         cost -= 0.25
 
     return max(cost, 0.05), high_break, low_edit
-
-
-# ============================================================
-# 动态规划对齐
-# ============================================================
 
 def align_candidate(
     pred: str,
@@ -548,7 +487,6 @@ def align_candidate(
             if math.isinf(current["cost"]):
                 continue
 
-            # 相同或替换
             if i < n and j < m:
                 pred_char = pred[i]
                 candidate_char = candidate[j]
@@ -607,7 +545,6 @@ def align_candidate(
                         ),
                     )
 
-            # candidate多一个字符：插入
             if j < m:
                 cost, low_edit = insertion_cost(
                     pred,
@@ -635,7 +572,6 @@ def align_candidate(
                     ),
                 )
 
-            # pred多一个字符：删除
             if i < n:
                 cost, high_break, low_edit = (
                     deletion_cost(
@@ -684,11 +620,6 @@ def align_candidate(
         operations=list(result["operations"]),
     )
 
-
-# ============================================================
-# 候选过滤
-# ============================================================
-
 def candidate_length_allowed(
     pred: str,
     candidate: str,
@@ -702,7 +633,6 @@ def candidate_length_allowed(
         return False
 
     return True
-
 
 def candidate_alignment_allowed(
     alignment: AlignmentResult,
@@ -725,12 +655,10 @@ def candidate_alignment_allowed(
     if total_edit > MAX_TOTAL_EDIT:
         return False
 
-    # 自动恢复阶段不允许破坏多个高置信度字符
     if alignment.high_conf_breaks > 0:
         return False
 
     return True
-
 
 def calculate_candidate_score(
     pred: str,
@@ -774,11 +702,6 @@ def calculate_candidate_score(
         low_conf_edits=alignment.low_conf_edits,
         operations=alignment.operations,
     )
-
-
-# ============================================================
-# Hybrid Recovery
-# ============================================================
 
 def hybrid_recover(
     pred: str,
@@ -894,7 +817,6 @@ def hybrid_recover(
     else:
         margin = 999.0
 
-    # 原结果置信度高时，需要更强的候选优势
     required_margin = MIN_SCORE_MARGIN
 
     if (
@@ -910,7 +832,6 @@ def hybrid_recover(
             "insufficient_margin",
         )
 
-    # 只靠一个低代价普通替换，也可能把正确词改错
     if (
         avg_conf >= KEEP_RAW_AVG_CONF
         and best.replacements > 0
@@ -948,11 +869,6 @@ def hybrid_recover(
         candidates[:5],
         reason,
     )
-
-
-# ============================================================
-# PARSeq
-# ============================================================
 
 class PARSeqHybridOCR:
     def __init__(
@@ -1021,11 +937,6 @@ class PARSeqHybridOCR:
         )
 
         return pred, confidences, avg_conf
-
-
-# ============================================================
-# 评估
-# ============================================================
 
 def evaluate_level(
     model: PARSeqHybridOCR,
@@ -1214,11 +1125,6 @@ def evaluate_level(
         "csv_rows": csv_rows,
     }
 
-
-# ============================================================
-# 输出
-# ============================================================
-
 def print_wrong_examples(
     wrong_examples: Sequence[Dict],
 ) -> None:
@@ -1279,7 +1185,6 @@ def print_wrong_examples(
                         )
                     )
 
-
 def save_csv(
     rows: Sequence[Dict],
 ) -> None:
@@ -1320,11 +1225,6 @@ def save_csv(
 
         writer.writeheader()
         writer.writerows(rows)
-
-
-# ============================================================
-# 主程序
-# ============================================================
 
 def main() -> None:
     print("device:", DEVICE)
@@ -1473,7 +1373,6 @@ def main() -> None:
         OUTPUT_CSV,
     )
     print("=" * 76)
-
 
 if __name__ == "__main__":
     main()

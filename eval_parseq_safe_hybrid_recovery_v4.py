@@ -9,11 +9,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-
-# ============================================================
-# 1. 路径设置
-# ============================================================
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 
 GT_TXT = (
@@ -28,11 +23,6 @@ OUTPUT_CSV = (
     r"\parseq_safe_hybrid_recovery_v4_result.csv"
 )
 
-
-# ============================================================
-# 2. 模型与图像参数
-# ============================================================
-
 IMG_H = 32
 IMG_W = 128
 MAX_TEXT_LEN = 25
@@ -41,61 +31,33 @@ DEVICE = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
 )
 
-
-# ============================================================
-# 3. Safe Recovery 参数
-# ============================================================
-
-# 低于该值的位置可以被修改
 LOW_CONF_THRESHOLD = 0.88
 
-# 极低置信度位置可以接受普通字符替换
 VERY_LOW_CONF_THRESHOLD = 0.55
 
-# 整体置信度达到以下条件时，不修改
 SAFE_AVG_CONF_THRESHOLD = 0.95
 SAFE_MIN_CONF_THRESHOLD = 0.75
 
-# 最多替换两个字符
 MAX_REPLACEMENTS = 2
 
-# 插入和删除均最多一个字符
 MAX_INSERTIONS = 1
 MAX_DELETIONS = 1
 
-# 候选最低字符重合率
 MIN_CHAR_OVERLAP = 0.60
 
-# 最佳候选必须领先第二候选
 MIN_SCORE_MARGIN = 0.30
 
-# 最大可接受成本
 MAX_REPLACE_COST = 1.80
 MAX_INSERT_COST = 1.30
 MAX_DELETE_COST = 1.30
 
-# 候选数量
 TOP_CANDIDATES = 5
 
-# 错例打印数量
 PRINT_WRONG_LIMIT = 30
 
-# True：使用 ISTD-OC 全部 GT 构建词表
-# 属于 closed-set evaluation
 USE_GT_LEXICON = True
 
-# 可选：开放词表，每行一个单词
 EXTERNAL_LEXICON_TXT = None
-
-# 例如：
-# EXTERNAL_LEXICON_TXT = (
-#     r"D:\mnist_project\ocr1\english_lexicon.txt"
-# )
-
-
-# ============================================================
-# 4. 视觉混淆字符
-# ============================================================
 
 CONFUSION_GROUPS = [
     set("I1LT"),
@@ -117,11 +79,6 @@ for group in CONFUSION_GROUPS:
     for ch in group:
         CONFUSION_MAP.setdefault(ch, set()).update(group)
 
-
-# ============================================================
-# 5. 图像预处理
-# ============================================================
-
 transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
@@ -130,11 +87,6 @@ transform = transforms.Compose([
         std=[0.5, 0.5, 0.5],
     ),
 ])
-
-
-# ============================================================
-# 6. 候选结构
-# ============================================================
 
 @dataclass
 class Candidate:
@@ -146,11 +98,6 @@ class Candidate:
     changed_positions: List[int]
     description: str
 
-
-# ============================================================
-# 7. 文本与词表工具
-# ============================================================
-
 def normalize_text(text: str) -> str:
     """
     转换为大写，仅保留字母和数字。
@@ -159,7 +106,6 @@ def normalize_text(text: str) -> str:
         ch for ch in text.upper()
         if ch.isalnum()
     )
-
 
 def load_gt(path: str) -> Dict[str, str]:
     if not os.path.exists(path):
@@ -196,7 +142,6 @@ def load_gt(path: str) -> Dict[str, str]:
 
     return data
 
-
 def load_external_lexicon(path: str) -> List[str]:
     if not os.path.exists(path):
         raise FileNotFoundError(
@@ -213,7 +158,6 @@ def load_external_lexicon(path: str) -> List[str]:
                 words.add(word)
 
     return sorted(words)
-
 
 def build_lexicon(
     gt_data: Dict[str, str],
@@ -235,7 +179,6 @@ def build_lexicon(
 
     return sorted(words)
 
-
 def build_length_index(
     lexicon: Sequence[str],
 ) -> Dict[int, List[str]]:
@@ -245,7 +188,6 @@ def build_length_index(
         index.setdefault(len(word), []).append(word)
 
     return index
-
 
 def char_overlap(a: str, b: str) -> float:
     ca = Counter(a)
@@ -258,7 +200,6 @@ def char_overlap(a: str, b: str) -> float:
 
     return common / max(len(a), len(b), 1)
 
-
 def is_same_char_type(a: str, b: str) -> bool:
     if a.isalpha() and b.isalpha():
         return True
@@ -268,13 +209,11 @@ def is_same_char_type(a: str, b: str) -> bool:
 
     return False
 
-
 def is_confusion_pair(a: str, b: str) -> bool:
     if a == b:
         return True
 
     return b in CONFUSION_MAP.get(a, set())
-
 
 def safe_confidence(
     confidences: Sequence[float],
@@ -284,7 +223,6 @@ def safe_confidence(
         return float(confidences[index])
 
     return 1.0
-
 
 def get_low_positions(
     pred: str,
@@ -303,11 +241,6 @@ def get_low_positions(
 
     return low_positions
 
-
-# ============================================================
-# 8. 绝对安全保护
-# ============================================================
-
 def should_keep_raw(
     pred: str,
     confidences: Sequence[float],
@@ -323,8 +256,6 @@ def should_keep_raw(
     if not pred:
         return True, "empty_prediction"
 
-    # Closed-set 下，正确预测必然在词表中。
-    # 因此可以彻底避免把正确结果改错。
     if pred in lexicon_set:
         return True, "raw_in_lexicon"
 
@@ -345,11 +276,6 @@ def should_keep_raw(
         return True, "high_confidence_raw"
 
     return False, "allow_recovery"
-
-
-# ============================================================
-# 9. 同长度替换恢复
-# ============================================================
 
 def replacement_cost(
     pred_char: str,
@@ -374,7 +300,6 @@ def replacement_cost(
     else:
         base = 1.25
 
-    # 置信度越低，修改成本越低
     if confidence < VERY_LOW_CONF_THRESHOLD:
         base *= 0.35
 
@@ -382,11 +307,10 @@ def replacement_cost(
         base *= 0.70
 
     else:
-        # 高置信度位置原则上不会进入修改
+
         base += 5.0
 
     return base
-
 
 def generate_replace_candidates(
     pred: str,
@@ -424,7 +348,6 @@ def generate_replace_candidates(
         if len(changed_positions) > MAX_REPLACEMENTS:
             continue
 
-        # 所有变化必须位于低置信度位置
         if any(
             position not in low_positions
             for position in changed_positions
@@ -443,7 +366,6 @@ def generate_replace_candidates(
                 position,
             )
 
-            # 中等低置信度位置只能做视觉相似替换
             if (
                 confidence >= VERY_LOW_CONF_THRESHOLD
                 and not is_confusion_pair(
@@ -474,7 +396,6 @@ def generate_replace_candidates(
         if overlap < MIN_CHAR_OVERLAP:
             continue
 
-        # 分数越高越好
         score = (
             2.0 * overlap
             - total_cost
@@ -503,11 +424,6 @@ def generate_replace_candidates(
         )
 
     return candidates
-
-
-# ============================================================
-# 10. 单字符插入恢复
-# ============================================================
 
 def find_single_insertion(
     pred: str,
@@ -548,7 +464,6 @@ def find_single_insertion(
 
     return True, insertion_position, inserted_char
 
-
 def insertion_is_near_low_confidence(
     insertion_position: int,
     pred: str,
@@ -583,7 +498,6 @@ def insertion_is_near_low_confidence(
         for position in nearby_positions
     )
 
-
 def generate_insert_candidates(
     pred: str,
     confidences: Sequence[float],
@@ -605,7 +519,6 @@ def generate_insert_candidates(
         if not valid:
             continue
 
-        # 必须在低置信度字符附近插入
         if not insertion_is_near_low_confidence(
             insertion_position,
             pred,
@@ -677,11 +590,6 @@ def generate_insert_candidates(
 
     return candidates
 
-
-# ============================================================
-# 11. 单字符删除恢复
-# ============================================================
-
 def find_single_deletion(
     pred: str,
     candidate: str,
@@ -721,7 +629,6 @@ def find_single_deletion(
 
     return True, deletion_position, deleted_char
 
-
 def generate_delete_candidates(
     pred: str,
     confidences: Sequence[float],
@@ -748,7 +655,6 @@ def generate_delete_candidates(
             deletion_position,
         )
 
-        # 只能删除低置信度字符
         if confidence >= LOW_CONF_THRESHOLD:
             continue
 
@@ -757,11 +663,9 @@ def generate_delete_candidates(
         else:
             cost = 0.70
 
-        # 词尾低置信度字符更可能是多余输出
         if deletion_position == len(pred) - 1:
             cost -= 0.15
 
-        # 重复字符降低删除成本
         if (
             deletion_position > 0
             and pred[deletion_position]
@@ -807,11 +711,6 @@ def generate_delete_candidates(
 
     return candidates
 
-
-# ============================================================
-# 12. Safe Hybrid Recovery
-# ============================================================
-
 def safe_hybrid_recover(
     pred: str,
     confidences: Sequence[float],
@@ -822,7 +721,7 @@ def safe_hybrid_recover(
     List[Candidate],
     str,
 ]:
-    # 第一层：绝对保护
+
     keep_raw, keep_reason = should_keep_raw(
         pred,
         confidences,
@@ -834,7 +733,6 @@ def safe_hybrid_recover(
 
     all_candidates: List[Candidate] = []
 
-    # A. 同长度替换
     same_length_words = length_index.get(
         len(pred),
         [],
@@ -852,7 +750,6 @@ def safe_hybrid_recover(
         replace_candidates
     )
 
-    # B. 仅插入一个字符
     longer_words = length_index.get(
         len(pred) + 1,
         [],
@@ -870,7 +767,6 @@ def safe_hybrid_recover(
         insert_candidates
     )
 
-    # C. 仅删除一个字符
     shorter_words = length_index.get(
         len(pred) - 1,
         [],
@@ -912,7 +808,6 @@ def safe_hybrid_recover(
     else:
         margin = 999.0
 
-    # 候选优势不足，不修改
     if margin < MIN_SCORE_MARGIN:
         return (
             pred,
@@ -920,7 +815,6 @@ def safe_hybrid_recover(
             "insufficient_margin",
         )
 
-    # 最佳候选分数必须为正
     if best.score <= 0:
         return (
             pred,
@@ -933,11 +827,6 @@ def safe_hybrid_recover(
         all_candidates[:TOP_CANDIDATES],
         best.edit_type,
     )
-
-
-# ============================================================
-# 13. PARSeq
-# ============================================================
 
 class PARSeqSafeHybridOCR:
     def __init__(
@@ -1006,11 +895,6 @@ class PARSeqSafeHybridOCR:
         )
 
         return pred, confidences, avg_conf
-
-
-# ============================================================
-# 14. 单等级评估
-# ============================================================
 
 def evaluate_level(
     model: PARSeqSafeHybridOCR,
@@ -1211,11 +1095,6 @@ def evaluate_level(
         "csv_rows": csv_rows,
     }
 
-
-# ============================================================
-# 15. 打印错例
-# ============================================================
-
 def print_wrong_examples(
     wrong_examples: Sequence[Dict],
 ) -> None:
@@ -1256,11 +1135,6 @@ def print_wrong_examples(
                     f"overlap={candidate.overlap:.2f} "
                     f"{candidate.description}"
                 )
-
-
-# ============================================================
-# 16. 保存 CSV
-# ============================================================
 
 def save_csv(
     rows: Sequence[Dict],
@@ -1304,11 +1178,6 @@ def save_csv(
         writer.writeheader()
         writer.writerows(rows)
 
-
-# ============================================================
-# 17. 主程序
-# ============================================================
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Run PARSeq + Safe Hybrid Recovery V4 on selected ISTD-OC levels."
@@ -1324,7 +1193,6 @@ def parse_args() -> argparse.Namespace:
         help="Use only external lexicon instead of GT closed-set lexicon.",
     )
     return parser.parse_args()
-
 
 def main() -> None:
     global ROOT
@@ -1533,7 +1401,6 @@ def main() -> None:
         args.output_csv,
     )
     print("=" * 76)
-
 
 if __name__ == "__main__":
     main()

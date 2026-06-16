@@ -9,9 +9,7 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import encode_text, decode_ctc, CHARS
 
-
 SAVE_WEIGHTS = "best_crnn_iiit5k.pth"
-
 
 def collate_fn(batch):
     images, texts = zip(*batch)
@@ -30,7 +28,6 @@ def collate_fn(batch):
 
     return images, texts, targets, target_lengths
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
     preds = logits.argmax(dim=2)
@@ -40,7 +37,6 @@ def greedy_decode(logits: torch.Tensor) -> list[str]:
     for seq in preds:
         results.append(decode_ctc(seq.cpu().tolist()))
     return results
-
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -74,7 +70,6 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
         total_loss += loss.item()
 
     return total_loss / len(loader)
-
 
 @torch.no_grad()
 def validate_one_epoch(model, loader, criterion, device):
@@ -118,7 +113,6 @@ def validate_one_epoch(model, loader, criterion, device):
     acc = correct / total if total > 0 else 0.0
     return avg_loss, acc
 
-
 def load_pretrained_partial(model, device):
     candidates = [
         "best_crnn_realprint.pth",
@@ -155,7 +149,6 @@ def load_pretrained_partial(model, device):
         return
 
     print("[WARN] no pretrained weights found, training from scratch.")
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -222,7 +215,6 @@ def main():
             print(f"best model saved: {SAVE_WEIGHTS}")
 
     print("training finished.")
-
 
 if __name__ == "__main__":
     if not os.path.exists("iiit5k_easy/train") or not os.path.exists("iiit5k_easy/val"):

@@ -7,7 +7,6 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 GT_TXT = r"D:\mnist_project\ocr1\recognition\recognition\gt_recognition.txt"
 
@@ -24,7 +23,6 @@ MAX_EDIT_DIST = 3
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 transform = transforms.Compose([
     transforms.Resize((IMG_H, IMG_W)),
     transforms.ToTensor(),
@@ -34,10 +32,8 @@ transform = transforms.Compose([
     )
 ])
 
-
 def normalize_text(text):
     return "".join(ch for ch in text.upper() if ch.isalnum())
-
 
 def load_gt(path):
     data = {}
@@ -62,7 +58,6 @@ def load_gt(path):
 
     return data
 
-
 def build_lexicon(gt_data):
     words = set()
 
@@ -73,7 +68,6 @@ def build_lexicon(gt_data):
             words.add(w)
 
     return sorted(words)
-
 
 def levenshtein(a, b):
     n = len(a)
@@ -99,7 +93,6 @@ def levenshtein(a, b):
 
     return dp[n][m]
 
-
 def char_overlap(a, b):
     ca = Counter(a)
     cb = Counter(b)
@@ -110,7 +103,6 @@ def char_overlap(a, b):
         common += min(ca[ch], cb.get(ch, 0))
 
     return common / max(len(a), len(b), 1)
-
 
 def detect_error_type(gt, pred):
     matcher = difflib.SequenceMatcher(None, gt, pred)
@@ -125,7 +117,6 @@ def detect_error_type(gt, pred):
             errors.append(("extra", "", pred[j1:j2]))
 
     return errors
-
 
 class OwnOcclusionPARSeq:
     def __init__(self, device):
@@ -201,7 +192,6 @@ class OwnOcclusionPARSeq:
 
         return candidates[0][0], candidates[:5]
 
-
 def evaluate_level(model, gt_data, lexicon, level):
     img_dir = os.path.join(ROOT, level)
 
@@ -267,7 +257,6 @@ def evaluate_level(model, gt_data, lexicon, level):
 
     return total, raw_correct, recovered_correct, raw_acc, recovered_acc, wrong_cases
 
-
 def main():
     print("device:", DEVICE)
 
@@ -331,7 +320,6 @@ def main():
                     )
 
     print("\nDONE")
-
 
 if __name__ == "__main__":
     main()

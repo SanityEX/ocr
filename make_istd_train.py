@@ -1,14 +1,12 @@
 import os
 import random
 
-
 ROOT = r"D:\mnist_project\ocr1\recognition\recognition"
 GT_TXT = r"D:\mnist_project\ocr1\recognition\recognition\gt_recognition.txt"
 
 LEVELS = ["10", "20", "30"]
 
 OUT_TXT = r"D:\mnist_project\ocr1\istd_train_10_20_30.txt"
-
 
 def load_gt(path):
     data = {}
@@ -32,7 +30,6 @@ def load_gt(path):
             data[name] = label
 
     return data
-
 
 def main():
     gt = load_gt(GT_TXT)
@@ -67,7 +64,6 @@ def main():
     print("total:", len(samples))
     print("saved:", OUT_TXT)
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

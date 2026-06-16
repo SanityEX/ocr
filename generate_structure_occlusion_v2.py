@@ -4,7 +4,6 @@ import string
 import shutil
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
-
 SAVE_DIR = r"D:\mnist_project\ocr1\char_occlusion_dataset_v2"
 IMG_DIR = os.path.join(SAVE_DIR, "images")
 LABEL_PATH = os.path.join(SAVE_DIR, "labels.txt")
@@ -76,12 +75,10 @@ MASK_MODES = [
     "small_patch"
 ]
 
-
 def reset_dir(path):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
-
 
 def load_fonts(font_dir):
     fonts = []
@@ -97,7 +94,6 @@ def load_fonts(font_dir):
 
     return fonts
 
-
 def get_font(fonts):
     size = random.randint(FONT_SIZE_MIN, FONT_SIZE_MAX)
 
@@ -105,7 +101,6 @@ def get_font(fonts):
         return ImageFont.truetype(random.choice(fonts), size)
 
     return ImageFont.truetype(r"C:\Windows\Fonts\arial.ttf", size)
-
 
 def random_word():
     p = random.random()
@@ -119,7 +114,6 @@ def random_word():
     length = random.randint(4, 10)
 
     return "".join(random.choice(string.ascii_uppercase) for _ in range(length))
-
 
 def draw_word(text, font):
     img = Image.new("L", (IMG_W, IMG_H), color=255)
@@ -136,7 +130,6 @@ def draw_word(text, font):
     draw.text((x, y), text, fill=random.randint(0, 40), font=font)
 
     return img
-
 
 def erase_structure(img):
     draw = ImageDraw.Draw(img)
@@ -214,7 +207,6 @@ def erase_structure(img):
 
     return img
 
-
 def degrade(img):
     if random.random() < 0.35:
         img = img.filter(
@@ -234,7 +226,6 @@ def degrade(img):
         )
 
     return img
-
 
 def main():
     reset_dir(SAVE_DIR)
@@ -271,7 +262,6 @@ def main():
     print("samples:", NUM_SAMPLES)
     print("words:", len(WORDS))
     print("=" * 50)
-
 
 if __name__ == "__main__":
     main()

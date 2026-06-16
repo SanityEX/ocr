@@ -7,23 +7,19 @@ from utils import CHARS
 RAW_DIR = "IIIT5K-Word_V3.0/IIIT5K"
 OUT_DIR = "iiit5k_alnum"
 
-TRAIN_RATIO = 0.9  # train -> 90%, val -> 10%
-
+TRAIN_RATIO = 0.9
 
 def reset_dir(path: str):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
 
-
 def ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
-
 
 def clean_label(text: str) -> str:
     allowed = set(CHARS)
     return "".join([c for c in text.strip() if c in allowed])
-
 
 def load_labels(label_file):
     samples = []
@@ -42,7 +38,6 @@ def load_labels(label_file):
             samples.append((filename, text))
 
     return samples
-
 
 def save_split(samples, src_image_dir, dst_root):
     dst_image_dir = os.path.join(dst_root, "images")
@@ -63,7 +58,6 @@ def save_split(samples, src_image_dir, dst_root):
 
     with open(label_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
-
 
 def main():
     reset_dir(OUT_DIR)
@@ -91,7 +85,6 @@ def main():
     print(f"train: {len(train_final)}")
     print(f"val:   {len(val_final)}")
     print(f"test:  {len(test_samples)}")
-
 
 if __name__ == "__main__":
     main()

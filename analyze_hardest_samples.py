@@ -7,7 +7,6 @@ from dataset import OCRDataset
 from model import CRNN
 from utils import CHARS, decode_ctc
 
-
 WEIGHTS_CANDIDATES = [
     "best_crnn_iiit5k_alnum_acc.pth",
     "best_crnn_iiit5k_alnum_loss.pth",
@@ -22,7 +21,6 @@ TEST_DIR_CANDIDATES = [
     "iiit5k_alnum/test",
     "iiit5k_easy/test",
 ]
-
 
 def levenshtein(a: str, b: str) -> int:
     n, m = len(a), len(b)
@@ -50,17 +48,15 @@ def levenshtein(a: str, b: str) -> int:
 
     return dp[n][m]
 
-
 def collate_fn(batch):
     images, texts = zip(*batch)
     images = torch.stack(images, dim=0)
     return images, texts
 
-
 @torch.no_grad()
 def greedy_decode(logits: torch.Tensor) -> list[str]:
-    preds = logits.argmax(dim=2)   # [T, B]
-    preds = preds.permute(1, 0)    # [B, T]
+    preds = logits.argmax(dim=2)
+    preds = preds.permute(1, 0)
 
     results = []
     for seq in preds:
@@ -73,20 +69,17 @@ def greedy_decode(logits: torch.Tensor) -> list[str]:
         results.append(decode_ctc(indices))
     return results
 
-
 def choose_weights():
     for path in WEIGHTS_CANDIDATES:
         if os.path.exists(path):
             return path
     raise FileNotFoundError("No weights found.")
 
-
 def choose_test_dir():
     for path in TEST_DIR_CANDIDATES:
         if os.path.exists(path):
             return path
     raise FileNotFoundError("No test dir found.")
-
 
 def error_type(gt: str, pred: str) -> str:
     if pred == gt:
@@ -98,7 +91,6 @@ def error_type(gt: str, pred: str) -> str:
         return "too_short"
 
     return "char_confusion"
-
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -214,7 +206,6 @@ def main():
     confusion = sorted(confusion, key=lambda x: x["distance"], reverse=True)
     for i, item in enumerate(confusion[:20], 1):
         print(f"{i:02d}. GT: {item['gt']} | Pred: {item['pred']} | dist={item['distance']}")
-
 
 if __name__ == "__main__":
     main()

@@ -8,17 +8,14 @@ PAD_IDX = 0
 SOS_IDX = 1
 EOS_IDX = 2
 
-# 普通字符从 3 开始
 char_to_idx = {c: i + 3 for i, c in enumerate(CHARS)}
 idx_to_char = {i + 3: c for i, c in enumerate(CHARS)}
 
 VOCAB_SIZE = len(CHARS) + 3
 
-
 def encode_text_ctc(text: str) -> list[int]:
     text = text.strip()
     return [char_to_idx[c] for c in text if c in char_to_idx]
-
 
 def decode_ctc(indices: list[int]) -> str:
     result = []
@@ -30,7 +27,6 @@ def decode_ctc(indices: list[int]) -> str:
         prev = idx
 
     return "".join(result)
-
 
 def encode_text_attention(text: str, max_len: int | None = None) -> list[int]:
     """
@@ -44,7 +40,6 @@ def encode_text_attention(text: str, max_len: int | None = None) -> list[int]:
     if max_len is not None:
         seq = seq[:max_len]
     return seq
-
 
 def decode_attention(indices: list[int]) -> str:
     chars = []

@@ -23,16 +23,13 @@ COMMON_WORDS = [
     "school", "paper", "button", "screen", "editor", "camera", "filter"
 ]
 
-
 def reset_dir(path: str):
     if os.path.exists(path):
         shutil.rmtree(path)
     os.makedirs(path, exist_ok=True)
 
-
 def ensure_dir(path: str):
     os.makedirs(path, exist_ok=True)
-
 
 def load_fonts(fonts_dir: str):
     fonts = []
@@ -50,10 +47,8 @@ def load_fonts(fonts_dir: str):
             fonts.append(os.path.join(fonts_dir, file))
     return fonts
 
-
 def random_word():
     return random.choice(COMMON_WORDS)
-
 
 def render_text_image(text: str, font_paths: list[str]):
     bg_white = True
@@ -87,7 +82,6 @@ def render_text_image(text: str, font_paths: list[str]):
 
     return img
 
-
 def save_split(split_name: str, count: int, font_paths: list[str], start_idx: int):
     split_dir = os.path.join(OUTPUT_DIR, split_name)
     image_dir = os.path.join(split_dir, "images")
@@ -110,7 +104,6 @@ def save_split(split_name: str, count: int, font_paths: list[str], start_idx: in
 
     print(f"{split_name}: {count} images saved.")
 
-
 def main():
     reset_dir(OUTPUT_DIR)
     font_paths = load_fonts(FONTS_DIR)
@@ -121,7 +114,6 @@ def main():
     save_split("test", TEST_COUNT, font_paths, TRAIN_COUNT + VAL_COUNT)
 
     print("dataset generation finished.")
-
 
 if __name__ == "__main__":
     main()

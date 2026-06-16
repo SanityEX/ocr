@@ -8,7 +8,6 @@ from model import CRNN
 from utils import CHARS
 from decode_utils import greedy_decode_from_logits, ctc_beam_search_batch
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", type=str, required=True, help="Path to input image")
@@ -45,7 +44,6 @@ def main():
 
     print("Greedy prediction:", greedy_pred)
     print("Beam prediction:  ", beam_pred)
-
 
 if __name__ == "__main__":
     main()

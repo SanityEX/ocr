@@ -1,9 +1,7 @@
 import difflib
 
-
 GT = "FAIRPRICE"
 PRED = "HAPRICE"
-
 
 def detect_missing(gt, pred):
     matcher = difflib.SequenceMatcher(None, gt, pred)
@@ -36,7 +34,6 @@ def detect_missing(gt, pred):
 
     return results
 
-
 def main():
     print("GT:", GT)
     print("Pred:", PRED)
@@ -47,7 +44,6 @@ def main():
 
     for r in results:
         print(r)
-
 
 if __name__ == "__main__":
     main()
